@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  passwordHash   String
+  name           String
+  role           Role         @default(ADMIN)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  refreshTokens  RefreshToken[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+enum Role { ADMIN STAFF }
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  logoUrl      String?
+  address      String?
+  phone        String?
+  email        String?
+  template     String   @default("classic")
+  members      Member[]
+  cards        IDCard[]
+  payments     Payment[]
+  users        User[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Member {
+  id             String   @id @default(cuid())
+  memberNumber   String                 // human-readable e.g. CSNG-2025-0001
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  position       String?
+  department     String?
+  photoUrl       String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  cards          IDCard[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, memberNumber])
+  @@index([organizationId])
+}
+
+model IDCard {
+  id             String   @id @default(cuid())
+  cardNumber     String   @unique
+  status         CardStatus @default(DRAFT)
+  memberId       String
+  member         Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  designJson     Json?                 // custom design overrides
+  frontImageUrl  String?
+  backImageUrl   String?
+  pdfUrl         String?
+  verificationId String   @unique      // public token used in QR
+  issuedAt       DateTime?
+  expiresAt      DateTime?
+  payments       Payment[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([verificationId])
+}
+
+enum CardStatus { DRAFT PENDING_PAYMENT PAID GENERATED PRINTED EXPIRED REVOKED }
+
+model Payment {
+  id             String   @id @default(cuid())
+  reference      String   @unique
+  amount         Int                   // kobo
+  currency       String   @default("NGN")
+  status         PaymentStatus @default(PENDING)
+  provider       String   @default("paystack")
+  cardId         String
+  card           IDCard   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  metadata       Json?
+  paidAt         DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId])
+}
+
+enum PaymentStatus { PENDING SUCCESS FAILED REFUNDED }
