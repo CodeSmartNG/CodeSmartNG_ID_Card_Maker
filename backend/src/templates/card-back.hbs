@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>{{{injectedStyles}}}</style>
+</head>
+<body>
+  <div class="card card--back">
+    <div class="card__magnetic"></div>
+
+    <div class="card__body">
+      <div>
+        <div class="card__info-title">Cardholder Information</div>
+
+        <div class="card__info-row">
+          <div class="card__info-label">Issued</div>
+          <div class="card__info-value">{{formattedIssued}}</div>
+        </div>
+        <div class="card__info-row">
+          <div class="card__info-label">Expires</div>
+          <div class="card__info-value">{{formattedExpiry}}</div>
+        </div>
+        <div class="card__info-row">
+          <div class="card__info-label">Card No.</div>
+          <div class="card__info-value">{{card.cardNumber}}</div>
+        </div>
+        <div class="card__info-row">
+          <div class="card__info-label">Contact</div>
+          <div class="card__info-value">{{organization.email}}</div>
+        </div>
+        <div class="card__info-row">
+          <div class="card__info-label">Phone</div>
+          <div class="card__info-value">{{organization.phone}}</div>
+        </div>
+      </div>
+
+      <div>
+        <img class="card__qr" src="{{qrDataUrl}}" alt="verify qr" />
+        <div class="card__verify-label">Scan to Verify</div>
+      </div>
+    </div>
+
+    <div class="card__footer">
+      This card remains the property of {{organization.name}}. If found, please return to
+      {{organization.address}}. Misuse is subject to disciplinary action.
+    </div>
+  </div>
+</body>
+</html>
