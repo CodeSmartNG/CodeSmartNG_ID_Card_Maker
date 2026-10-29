@@ -7,20 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id             String       @id @default(cuid())
-  email          String       @unique
-  passwordHash   String
-  name           String
-  role           Role         @default(ADMIN)
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  refreshTokens  RefreshToken[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+enum Role {
+  ADMIN
+  STAFF
 }
 
-enum Role { ADMIN STAFF }
+enum CardStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PAID
+  GENERATED
+  PRINTED
+  EXPIRED
+  REVOKED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+  PARTIAL_REFUND
+}
+
+model User {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  passwordHash   String
+  name           String
+  role           Role           @default(ADMIN)
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  refreshTokens  RefreshToken[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
 
 model RefreshToken {
   id        String   @id @default(cuid())
@@ -32,25 +53,27 @@ model RefreshToken {
 }
 
 model Organization {
-  id           String   @id @default(cuid())
+  id           String       @id @default(cuid())
   name         String
-  slug         String   @unique
+  slug         String       @unique
   logoUrl      String?
   address      String?
   phone        String?
   email        String?
-  template     String   @default("classic")
+  website      String?
+  tagline      String?
+  template     String       @default("classic")
   members      Member[]
   cards        IDCard[]
   payments     Payment[]
   users        User[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
 
 model Member {
-  id             String   @id @default(cuid())
-  memberNumber   String                 // human-readable e.g. CSNG-2025-0001
+  id             String       @id @default(cuid())
+  memberNumber   String
   firstName      String
   lastName       String
   email          String?
@@ -61,54 +84,51 @@ model Member {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   cards          IDCard[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@unique([organizationId, memberNumber])
   @@index([organizationId])
 }
 
 model IDCard {
-  id             String   @id @default(cuid())
-  cardNumber     String   @unique
-  status         CardStatus @default(DRAFT)
+  id             String       @id @default(cuid())
+  cardNumber     String       @unique
+  status         CardStatus   @default(DRAFT)
   memberId       String
-  member         Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member         Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  designJson     Json?                 // custom design overrides
+  designJson     Json?
   frontImageUrl  String?
   backImageUrl   String?
   pdfUrl         String?
-  verificationId String   @unique      // public token used in QR
+  verificationId String       @unique
   issuedAt       DateTime?
   expiresAt      DateTime?
   payments       Payment[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@index([organizationId])
   @@index([verificationId])
 }
 
-enum CardStatus { DRAFT PENDING_PAYMENT PAID GENERATED PRINTED EXPIRED REVOKED }
-
 model Payment {
-  id             String   @id @default(cuid())
-  reference      String   @unique
-  amount         Int
-  currency       String   @default("NGN")
-  status         PaymentStatus @default(PENDING)
-  provider       String   @default("paystack")
-  cardId         String
-  card           IDCard   @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  metadata       Json?
-  paidAt         DateTime?
-  createdAt      DateTime @default(now())
-
-  // + ADD
+  id                 String        @id @default(cuid())
+  reference          String        @unique
+  amount             Int
+  currency           String        @default("NGN")
+  status             PaymentStatus @default(PENDING)
+  provider           String        @default("paystack")
+  cardId             String
+  card               IDCard        @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  organizationId     String
+  organization       Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  metadata           Json?
+  paidAt             DateTime?
+  
+  // Refund Fields
   refundedAt         DateTime?
   refundedAmount     Int?
   refundReference    String?
@@ -116,16 +136,10 @@ model Payment {
   refundedByUserId   String?
   failureReason      String?
   lastEventAt        DateTime?
+  
+  createdAt          DateTime      @default(now())
 
   @@index([organizationId])
   @@index([status])
   @@index([refundReference])
-}
-
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  REFUNDED         // + ADD
-  PARTIAL_REFUND   // + ADD
 }
