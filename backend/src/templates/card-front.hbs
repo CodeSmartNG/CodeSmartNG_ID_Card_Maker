@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>{{{injectedStyles}}}</style>
+</head>
+<body>
+  <div class="card card--front">
+    <div class="card__header">
+      {{#if organization.logoUrl}}
+        <img class="card__logo" src="{{organization.logoUrl}}" alt="logo" />
+      {{/if}}
+      <div>
+        <div class="card__org-name">{{organization.name}}</div>
+        {{#if organization.tagline}}
+          <div class="card__org-tagline">{{organization.tagline}}</div>
+        {{/if}}
+      </div>
+    </div>
+
+    <div class="card__body">
+      <img
+        class="card__photo"
+        src="{{#if member.photoUrl}}{{member.photoUrl}}{{else}}{{placeholderPhoto}}{{/if}}"
+        alt="{{member.firstName}}"
+      />
+
+      <div>
+        <div class="card__name">{{member.firstName}} {{member.lastName}}</div>
+        <div class="card__position">{{member.position}}</div>
+
+        <div class="card__fields">
+          <div class="card__field">
+            <div class="card__field-label">ID No.</div>
+            <div class="card__field-value">{{member.memberNumber}}</div>
+          </div>
+          <div class="card__field">
+            <div class="card__field-label">Department</div>
+            <div class="card__field-value">{{member.department}}</div>
+          </div>
+          <div class="card__field">
+            <div class="card__field-label">Valid Until</div>
+            <div class="card__field-value">{{formattedExpiry}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card__footer">
+      <span>{{organization.website}}</span>
+      <span class="card__footer-accent">OFFICIAL ID</span>
+    </div>
+  </div>
+</body>
+</html>
