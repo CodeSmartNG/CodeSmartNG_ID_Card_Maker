@@ -1,0 +1,208 @@
+/* Classic — navy + gold, serif accents. Corporate/official look. */
+:root {
+  --primary: #0f172a;
+  --accent: #f59e0b;
+  --text: #0f172a;
+  --muted: #64748b;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.card {
+  width: 1013px;
+  height: 638px;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* Front */
+.card--front .card__header {
+  height: 140px;
+  background: linear-gradient(135deg, var(--primary), #1e293b);
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+  gap: 24px;
+}
+
+.card--front .card__logo {
+  width: 80px; height: 80px;
+  border-radius: 12px;
+  background: white;
+  padding: 8px;
+  object-fit: contain;
+}
+
+.card--front .card__org-name {
+  color: white;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.card--front .card__org-tagline {
+  color: var(--accent);
+  font-size: 14px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.card--front .card__body {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 36px;
+  padding: 36px 40px;
+  align-items: start;
+}
+
+.card--front .card__photo {
+  width: 220px; height: 260px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 4px solid var(--accent);
+  background: var(--border);
+}
+
+.card--front .card__name {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--primary);
+}
+
+.card--front .card__position {
+  font-size: 18px;
+  color: var(--muted);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.card--front .card__fields {
+  margin-top: 28px;
+  display: grid;
+  gap: 14px;
+}
+
+.card--front .card__field {
+  display: flex;
+  gap: 12px;
+  font-size: 15px;
+}
+
+.card--front .card__field-label {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  min-width: 90px;
+  padding-top: 2px;
+}
+
+.card--front .card__field-value {
+  color: var(--text);
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.card--front .card__footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  color: white;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.card--front .card__footer-accent {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Back */
+.card--back {
+  background: var(--primary);
+  color: white;
+}
+
+.card--back .card__magnetic {
+  height: 90px;
+  background: #000;
+  margin-top: 60px;
+}
+
+.card--back .card__body {
+  padding: 40px;
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 40px;
+  align-items: start;
+}
+
+.card--back .card__qr {
+  width: 200px; height: 200px;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.card--back .card__verify-label {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.card--back .card__info-title {
+  font-size: 14px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.card--back .card__info-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.card--back .card__info-label {
+  color: rgba(255,255,255,0.5);
+  min-width: 110px;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding-top: 3px;
+}
+
+.card--back .card__info-value {
+  color: white;
+  font-weight: 500;
+}
+
+.card--back .card__footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 20px 40px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  font-size: 10px;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
