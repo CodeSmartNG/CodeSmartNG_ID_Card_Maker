@@ -15,7 +15,8 @@ import {
 } from '../controllers/payment.controller.js';
 
 import { requireAuth, requireRole } from '../middleware/auth.js';
-import { validate } from '../middleware/validate.js';
+
+import { validateBody, validateQuery, validateParams } from '../middleware/validate.js';
 
 /* =========================================================
    RATE LIMITERS
