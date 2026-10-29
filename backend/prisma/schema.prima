@@ -112,3 +112,30 @@ model Payment {
 }
 
 enum PaymentStatus { PENDING SUCCESS FAILED REFUNDED }
+
+
+
+
+  refundedAt         DateTime?
+  refundedAmount     Int?          // kobo
+  refundReference    String?       // Paystack refund reference
+  refundReason       String?
+  refundedByUserId   String?       // audit: who issued it
+  failureReason      String?       // from gateway on FAILED
+
+  // Audit
+  lastEventAt        DateTime?     // last webhook/verify touch
+  reconciliationNote String?
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([refundReference])
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED         // ← new: fully refunded
+  PARTIAL_REFUND   // ← new: partial refund
+}
