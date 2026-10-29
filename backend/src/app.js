@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import { env } from './config/env.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
+import cookieParser from 'cookie-parser';
+
 
 export const app = express();
 
@@ -12,6 +14,7 @@ app.use(helmet());
 app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
 app.use(morgan('dev'));
 
+app.use(cookieParser());
 // Paystack webhook must receive RAW body
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 
