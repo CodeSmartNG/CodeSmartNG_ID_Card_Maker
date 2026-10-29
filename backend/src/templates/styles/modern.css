@@ -1,0 +1,215 @@
+/* Modern — bold gradients, geometric, sans-serif. Tech/startup look. */
+:root {
+  --primary: #6366f1;
+  --primary-2: #8b5cf6;
+  --accent: #22d3ee;
+  --text: #0f172a;
+  --muted: #64748b;
+  --surface: #ffffff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.card {
+  width: 1013px;
+  height: 638px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.card--front .card__header {
+  height: 160px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  padding: 0 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.card--front .card__header::after {
+  content: '';
+  position: absolute;
+  right: -60px; top: -80px;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+}
+
+.card--front .card__org-name {
+  color: white;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  z-index: 2;
+}
+
+.card--front .card__logo {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: white;
+  padding: 8px;
+  object-fit: contain;
+  z-index: 2;
+}
+
+.card--front .card__body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 40px;
+  padding: 40px 44px;
+}
+
+.card--front .card__photo {
+  width: 240px; height: 280px;
+  border-radius: 20px;
+  object-fit: cover;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  padding: 3px;
+}
+
+.card--front .card__name {
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card--front .card__position {
+  font-size: 17px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-top: 8px;
+  letter-spacing: 0.5px;
+}
+
+.card--front .card__fields {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.card--front .card__field {
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border-left: 4px solid var(--primary);
+}
+
+.card--front .card__field-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.card--front .card__field-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: 'SF Mono', 'Courier New', monospace;
+}
+
+.card--front .card__footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 70px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 44px;
+  color: white;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.card--back {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  color: white;
+}
+
+.card--back .card__magnetic {
+  height: 100px;
+  background: #000;
+  margin-top: 70px;
+}
+
+.card--back .card__body {
+  padding: 44px;
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 44px;
+}
+
+.card--back .card__qr {
+  width: 180px; height: 180px;
+  background: white;
+  padding: 10px;
+  border-radius: 16px;
+}
+
+.card--back .card__verify-label {
+  text-align: center;
+  margin-top: 14px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.card--back .card__info-title {
+  font-size: 12px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+.card--back .card__info-row {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.card--back .card__info-label {
+  color: rgba(255,255,255,0.45);
+  min-width: 120px;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding-top: 3px;
+  font-weight: 600;
+}
+
+.card--back .card__info-value {
+  color: white;
+  font-weight: 600;
+}
+
+.card--back .card__footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 22px 44px;
+  background: rgba(0,0,0,0.35);
+  font-size: 10px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.3px;
+}
