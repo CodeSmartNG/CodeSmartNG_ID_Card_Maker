@@ -1,5 +1,5 @@
+// frontend/src/components/ErrorBoundary.jsx
 import { Component } from 'react';
-import { Link } from 'react-router-dom';
 
 export default class ErrorBoundary extends Component {
   state = { hasError: false, error: null };
@@ -9,18 +9,21 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('Route error:', error, info);
+    console.error('App crashed:', error, info);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="error-fallback">
+        <div style={{ padding: '3rem', textAlign: 'center', fontFamily: 'sans-serif' }}>
           <h1>Something went wrong</h1>
-          <p>{this.state.error?.message || 'Unexpected error'}</p>
-          <Link to="/">Go home</Link>
-          {' · '}
-          <button onClick={() => window.location.reload()}>Reload</button>
+          <p>{this.state.error?.message}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{ padding: '10px 20px', marginTop: '20px', cursor: 'pointer' }}
+          >
+            Reload Page
+          </button>
         </div>
       );
     }
