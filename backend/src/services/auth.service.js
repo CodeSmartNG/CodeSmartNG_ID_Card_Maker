@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { createHash, randomBytes } from 'crypto';
+import { createHash } from 'crypto';
 import { prisma } from '../config/database.js';
 import { ApiError } from '../utils/ApiError.js';
 import {
@@ -7,8 +7,6 @@ import {
   signRefreshToken,
   verifyRefreshToken,
 } from '../utils/generateToken.js';
-import { env } from '../config/env.js';
-
 
 const BCRYPT_ROUNDS = 12;
 
@@ -30,7 +28,6 @@ const ensureUniqueSlug = async (base) => {
   return slug;
 };
 
-// We store refresh tokens hashed so a DB leak can't be replayed
 const hashToken = (token) => createHash('sha256').update(token).digest('hex');
 
 const persistRefreshToken = async (userId, token) => {
@@ -64,7 +61,6 @@ export const register = async ({ name, email, password, organizationName, phone 
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
   const slug = await ensureUniqueSlug(slugify(organizationName));
 
-  // Create org + admin in one transaction
   const result = await prisma.$transaction(async (tx) => {
     const org = await tx.organization.create({
       data: { name: organizationName, slug, phone, email },
@@ -97,7 +93,6 @@ export const login = async ({ email, password }) => {
     include: { organization: true },
   });
 
-  // Constant-time: always run bcrypt even if user missing (prevents user enumeration)
   const hash = user?.passwordHash ?? '$2b$12$invalidinvalidinvalidinvalidinvalidinvalidinvalid';
   const ok = await bcrypt.compare(password, hash);
   if (!user || !ok) throw new ApiError(401, 'Invalid credentials');
@@ -139,7 +134,6 @@ export const refresh = async (rawToken) => {
   });
   if (!user) throw new ApiError(401, 'User no longer exists');
 
-  // Rotate: delete old, issue new
   await prisma.refreshToken.delete({ where: { id: stored.id } });
   const tokens = await issueTokens(user);
 
@@ -174,22 +168,11 @@ export const me = async (userId) => {
   return { ...sanitizeUser(user), organization: user.organization };
 };
 
-/* ---------- periodic cleanup (call from a job) ---------- */
+/* ---------- periodic cleanup ---------- */
 
 export const purgeExpiredTokens = async () => {
   const { count } = await prisma.refreshToken.deleteMany({
     where: { expiresAt: { lt: new Date() } },
   });
   return count;
-};
-
-// authService.js
-
-
-export const authService = {
-  register: (data) => api.post('/auth/register', data),
-  login: (data) => api.post('/auth/login', data),
-  me: () => api.get('/auth/me'),
-  logout: () => api.post('/auth/logout'),
-  logoutAll: () => api.post('/auth/logout-all'),
 };
