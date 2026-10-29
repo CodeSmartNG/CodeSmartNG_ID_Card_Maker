@@ -8,6 +8,7 @@ import {
   verifyRefreshToken,
 } from '../utils/generateToken.js';
 import { env } from '../config/env.js';
+import api from './api';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -180,4 +181,15 @@ export const purgeExpiredTokens = async () => {
     where: { expiresAt: { lt: new Date() } },
   });
   return count;
+};
+
+// authService.js
+
+
+export const authService = {
+  register: (data) => api.post('/auth/register', data),
+  login: (data) => api.post('/auth/login', data),
+  me: () => api.get('/auth/me'),
+  logout: () => api.post('/auth/logout'),
+  logoutAll: () => api.post('/auth/logout-all'),
 };
