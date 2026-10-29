@@ -96,7 +96,7 @@ enum CardStatus { DRAFT PENDING_PAYMENT PAID GENERATED PRINTED EXPIRED REVOKED }
 model Payment {
   id             String   @id @default(cuid())
   reference      String   @unique
-  amount         Int                   // kobo
+  amount         Int
   currency       String   @default("NGN")
   status         PaymentStatus @default(PENDING)
   provider       String   @default("paystack")
@@ -108,27 +108,17 @@ model Payment {
   paidAt         DateTime?
   createdAt      DateTime @default(now())
 
-  @@index([organizationId])
-}
-
-enum PaymentStatus { PENDING SUCCESS FAILED REFUNDED }
-
-
-
-
+  // + ADD
   refundedAt         DateTime?
-  refundedAmount     Int?          // kobo
-  refundReference    String?       // Paystack refund reference
+  refundedAmount     Int?
+  refundReference    String?
   refundReason       String?
-  refundedByUserId   String?       // audit: who issued it
-  failureReason      String?       // from gateway on FAILED
+  refundedByUserId   String?
+  failureReason      String?
+  lastEventAt        DateTime?
 
-  // Audit
-  lastEventAt        DateTime?     // last webhook/verify touch
-  reconciliationNote String?
-
+  @@index([organizationId])
   @@index([status])
-  @@index([createdAt])
   @@index([refundReference])
 }
 
@@ -136,6 +126,6 @@ enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
-  REFUNDED         // ← new: fully refunded
-  PARTIAL_REFUND   // ← new: partial refund
+  REFUNDED         // + ADD
+  PARTIAL_REFUND   // + ADD
 }
