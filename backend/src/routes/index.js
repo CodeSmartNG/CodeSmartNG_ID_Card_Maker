@@ -1,15 +1,15 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes.js';
 import memberRoutes from './member.routes.js';
-import paymentRoutes from './payment.routes.js'; // <-- Add this import
+import paymentRoutes from './payment.routes.js';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/members', memberRoutes);
-router.use('/payments', paymentRoutes); // <-- Add this line
+router.use('/payments', paymentRoutes);
 
-// Note: Comment out the ones below until you actually create those files!
+// These will crash the server if the files don't exist yet!
 // router.use('/organizations', orgRoutes);
 // router.use('/cards', cardRoutes);
 // router.use('/verify', verificationRoutes);
