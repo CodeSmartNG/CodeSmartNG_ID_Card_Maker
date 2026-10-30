@@ -929,3 +929,14 @@
   transform: scale(1.2); /* Zoom in slightly for better visibility */
   transform-origin: center;
 }
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.status-badge--success { background: #d1fae5; color: #065f46; }
+.status-badge--pending { background: #fef3c7; color: #92400e; }
+.status-badge--failed { background: #fee2e2; color: #991b1b; }
