@@ -67,7 +67,7 @@ export default function Dashboard() {
         const [statsRes, paymentsRes, membersRes] = await Promise.all([
           api.get('/payments/stats'),
           api.get('/payments?limit=5&status=SUCCESS'),
-          api.get('/members?limit=1'), // just for count
+          api.get('/members?limit=1'),
         ]);
 
         if (cancelled) return;
@@ -176,9 +176,6 @@ export default function Dashboard() {
         <section className="dashboard__panel">
           <div className="panel-header">
             <h2>Recent Payments</h2>
-            <Link to="/cards/history" className="panel-link">
-              View all →
-            </Link>
           </div>
 
           {loading ? (
@@ -239,19 +236,11 @@ export default function Dashboard() {
               </div>
             </Link>
 
-            <Link to="/organization" className="quick-action">
-              <span className="quick-action__icon">🏢</span>
+            <Link to="/members" className="quick-action">
+              <span className="quick-action__icon">👥</span>
               <div>
-                <div className="quick-action__title">Organization</div>
-                <div className="quick-action__desc">Logo, address, contact</div>
-              </div>
-            </Link>
-
-            <Link to="/cards/history" className="quick-action">
-              <span className="quick-action__icon">📜</span>
-              <div>
-                <div className="quick-action__title">Card History</div>
-                <div className="quick-action__desc">All issued cards</div>
+                <div className="quick-action__title">Members List</div>
+                <div className="quick-action__desc">View all members</div>
               </div>
             </Link>
           </div>
