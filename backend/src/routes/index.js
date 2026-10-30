@@ -7,10 +7,10 @@ const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/members', memberRoutes);
-// router.use('/organizations', orgRoutes);
-// router.use('/members', memberRoutes);
-// router.use('/cards', cardRoutes);
-// router.use('/payments', paymentRoutes);
-// router.use('/verify', verificationRoutes);
+ router.use('/organizations', orgRoutes);
+ router.use('/members', memberRoutes);
+ router.use('/cards', cardRoutes);
+ router.use('/payments', paymentRoutes);
+ router.use('/verify', verificationRoutes);
 
 export default router;
