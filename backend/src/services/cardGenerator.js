@@ -1,10 +1,11 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { uploadCardPdf } from './storageService.js';
+import { generateQrBuffer } from './qrService.js'; // 👈 Import QR Service
 import { logger } from '../config/logger.js';
 
 export const generateCardPdf = async ({ card, member, organization }) => {
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([242.6, 153]); // CR80 Size
+  const page = pdfDoc.addPage([242.6, 153]); // CR80 Size (3.375in x 2.125in)
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -35,12 +36,39 @@ export const generateCardPdf = async ({ card, member, organization }) => {
     x: 15, y: 6, size: 8, font: font, color: rgb(1, 1, 1),
   });
 
-  // Photo Embed
+  // 👇 ADD THE QR CODE HERE
+  try {
+    const qrBuffer = await generateQrBuffer(card.verificationId);
+    const qrImage = await pdfDoc.embedPng(qrBuffer);
+    
+    // Draw QR code in the bottom right corner
+    page.drawImage(qrImage, { 
+      x: 175, // X position
+      y: 30,  // Y position
+      width: 50, // Width of QR code
+      height: 50 // Height of QR code
+    });
+
+    // Add a tiny "Scan to Verify" text under the QR code
+    page.drawText('Scan to Verify', {
+      x: 178, y: 22, size: 6, font: font, color: rgb(0.4, 0.4, 0.4),
+    });
+  } catch (err) {
+    logger.warn('Could not embed QR code in PDF', err);
+  }
+
+  // 👇 ADD THE PHOTO HERE
   if (member.photoUrl && member.photoUrl.startsWith('http')) {
     try {
       const photoResponse = await fetch(member.photoUrl);
       const photoBuffer = await photoResponse.arrayBuffer();
-      const image = await pdfDoc.embedJpg(photoBuffer);
+      
+      // Check if it's PNG or JPG
+      const isPng = member.photoUrl.toLowerCase().endsWith('.png');
+      const image = isPng 
+        ? await pdfDoc.embedPng(photoBuffer) 
+        : await pdfDoc.embedJpg(photoBuffer);
+        
       page.drawImage(image, { x: 15, y: 35, width: 60, height: 70 });
     } catch (err) {
       logger.warn('Could not embed photo in PDF');
@@ -50,11 +78,11 @@ export const generateCardPdf = async ({ card, member, organization }) => {
   const pdfBytes = await pdfDoc.save();
   const buffer = Buffer.from(pdfBytes);
 
+  // Upload to Cloudinary (or local)
   const pdfUrl = await uploadCardPdf(buffer, card.id);
   return { buffer, pdfUrl };
 };
 
-// 👇 ADD THIS FUNCTION BACK SO THE CONTROLLER DOESN'T CRASH
 export const generateCardPreview = async (data) => {
   const result = await generateCardPdf(data);
   return {
