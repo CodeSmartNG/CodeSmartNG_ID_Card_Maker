@@ -16,6 +16,7 @@ const EditMember = lazy(() => import('../pages/EditMember'));
 const CardDesigner = lazy(() => import('../pages/CardDesigner'));
 const CardPayment = lazy(() => import('../pages/CardPayment'));
 const PaymentSuccess = lazy(() => import('../pages/PaymentSuccess'));
+const CardHistory = lazy(() => import('../pages/CardHistory')); // <-- ADDED THIS
 const NotFound = lazy(() => import('../pages/NotFound'));
 
 /* =========================================================
@@ -64,6 +65,7 @@ export const router = createBrowserRouter([
       { path: '/members/:id/edit', element: wrap(<EditMember />) },
       { path: '/cards/new', element: wrap(<CardDesigner />) },
       { path: '/cards/pay/:cardId', element: wrap(<CardPayment />) },
+      { path: '/cards/history', element: wrap(<CardHistory />) }, // <-- ADDED THIS ROUTE
     ]
   },
 
