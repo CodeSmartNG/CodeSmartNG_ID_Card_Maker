@@ -41,6 +41,7 @@ export const router = createBrowserRouter([
       { path: '/members/new', element: wrap(<AddMember />) },
       { path: '/members/:id/edit', element: wrap(<EditMember />) },
       { path: '/cards/new', element: wrap(<CardDesigner />) },
+       { path: '/cards/pay/:cardId', element: wrap(<CardPayment />) },
     ]
   },
   { path: '*', element: wrap(<NotFound />) },
