@@ -7,9 +7,7 @@ import { useAuth } from '../hooks/useAuth';
    1. LAZY LOAD PAGES
    ========================================================= */
 
-import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
-import { useAuth } from '../hooks/useAuth';
+
 
 const Home = lazy(() => import('../pages/Home'));
 const Login = lazy(() => import('../pages/Login'));
