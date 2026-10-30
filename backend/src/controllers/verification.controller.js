@@ -28,11 +28,7 @@ export const verifyCard = asyncHandler(async (req, res) => {
   });
 
   if (!card) throw new ApiError(404, 'Invalid ID Card. Not found in our system.');
-
-  // Check if the card is revoked
-  if (card.status === 'REVOKED') {
-    throw new ApiError(403, 'This ID card has been revoked and is no longer valid.');
-  }
+  if (card.status === 'REVOKED') throw new ApiError(403, 'This ID card has been revoked and is no longer valid.');
 
   res.json({
     status: 'VALID',
