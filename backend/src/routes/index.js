@@ -1,12 +1,48 @@
-import { Router } from 'express';
-import authRoutes from './auth.routes.js';
-import memberRoutes from './member.routes.js';
-import paymentRoutes from './payment.routes.js';
+// frontend/src/routes/index.jsx
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
-const router = Router();
+// Load pages
+const Home = lazy(() => import('../pages/Home'));
+const Login = lazy(() => import('../pages/Login'));
+const Register = lazy(() => import('../pages/Register'));
+const Dashboard = lazy(() => import('../pages/Dashboard'));
+const Members = lazy(() => import('../pages/Members'));
+const AddMember = lazy(() => import('../pages/AddMember'));
+const CardDesigner = lazy(() => import('../pages/CardDesigner'));
+const CardHistory = lazy(() => import('../pages/CardHistory'));
+const PaymentSuccess = lazy(() => import('../pages/PaymentSuccess'));
+const NotFound = lazy(() => import('../pages/NotFound'));
 
-router.use('/auth', authRoutes);
-router.use('/members', memberRoutes);
-router.use('/payments', paymentRoutes);
+// Protect dashboard routes
+function ProtectedRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  return <Outlet />;
+}
 
-export default router;
+const wrap = (el) => (
+  <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
+    {el}
+  </Suspense>
+);
+
+export const router = createBrowserRouter([
+  { path: '/', element: wrap(<Home />) },
+  { path: '/login', element: wrap(<Login />) },
+  { path: '/register', element: wrap(<Register />) },
+  { path: '/payment/success', element: wrap(<PaymentSuccess />) },
+  { 
+    element: <ProtectedRoute />,
+    children: [
+      { path: '/dashboard', element: wrap(<Dashboard />) },
+      { path: '/members', element: wrap(<Members />) },
+      { path: '/members/new', element: wrap(<AddMember />) },
+      { path: '/cards/new', element: wrap(<CardDesigner />) },
+      { path: '/cards/history', element: wrap(<CardHistory />) },
+    ]
+  },
+  { path: '*', element: wrap(<NotFound />) },
+]);
