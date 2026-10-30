@@ -6,6 +6,11 @@ import { useAuth } from '../hooks/useAuth';
 /* =========================================================
    1. LAZY LOAD PAGES
    ========================================================= */
+
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { useAuth } from '../hooks/useAuth';
+
 const Home = lazy(() => import('../pages/Home'));
 const Login = lazy(() => import('../pages/Login'));
 const Register = lazy(() => import('../pages/Register'));
@@ -16,11 +21,9 @@ const EditMember = lazy(() => import('../pages/EditMember'));
 const CardDesigner = lazy(() => import('../pages/CardDesigner'));
 const CardPayment = lazy(() => import('../pages/CardPayment'));
 const PaymentSuccess = lazy(() => import('../pages/PaymentSuccess'));
-const CardHistory = lazy(() => import('../pages/CardHistory')); // <-- ADDED THIS
+const CardHistory = lazy(() => import('../pages/CardHistory'));
+const VerifyCard = lazy(() => import('../pages/VerifyCard')); // 👈 MAKE SURE THIS IS HERE
 const NotFound = lazy(() => import('../pages/NotFound'));
-const VerifyCard = lazy(() => import('../pages/VerifyCard'));
-
-
 
 
 /* =========================================================
