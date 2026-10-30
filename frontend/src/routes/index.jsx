@@ -18,6 +18,10 @@ const CardPayment = lazy(() => import('../pages/CardPayment'));
 const PaymentSuccess = lazy(() => import('../pages/PaymentSuccess'));
 const CardHistory = lazy(() => import('../pages/CardHistory')); // <-- ADDED THIS
 const NotFound = lazy(() => import('../pages/NotFound'));
+const VerifyCard = lazy(() => import('../pages/VerifyCard'));
+
+
+
 
 /* =========================================================
    2. PROTECTED ROUTE WRAPPER
@@ -65,7 +69,8 @@ export const router = createBrowserRouter([
       { path: '/members/:id/edit', element: wrap(<EditMember />) },
       { path: '/cards/new', element: wrap(<CardDesigner />) },
       { path: '/cards/pay/:cardId', element: wrap(<CardPayment />) },
-      { path: '/cards/history', element: wrap(<CardHistory />) }, // <-- ADDED THIS ROUTE
+      { path: '/cards/history', element: wrap(<CardHistory />) },
+       { path: '/verify/:id', element: wrap(<VerifyCard />) },
     ]
   },
 
