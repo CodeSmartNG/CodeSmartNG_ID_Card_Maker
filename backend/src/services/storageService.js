@@ -35,21 +35,23 @@ const s3Save = async (buffer, key, contentType) => {
       Bucket: env.STORAGE_BUCKET,
       Key: key,
       Body: buffer,
-      ContentType: contentType, // ✅ Dynamic content type
+      ContentType: contentType,
     })
   );
   return `https://${env.STORAGE_BUCKET}.s3.amazonaws.com/${key}`;
 };
 
 /* =========================================================
-   CLOUDINARY DRIVER
+   CLOUDINARY DRIVER (UPDATED)
    ========================================================= */
 const cloudinarySave = async (buffer, key, isPdf) => {
   const { v2: cloudinary } = await import('cloudinary');
+  
+  // ✅ Using the exact variable names you added to Render
   cloudinary.config({
-    cloud_name: env.STORAGE_BUCKET,
-    api_key: env.STORAGE_KEY,
-    api_secret: env.STORAGE_SECRET,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
   });
 
   return new Promise((resolve, reject) => {
@@ -58,9 +60,15 @@ const cloudinarySave = async (buffer, key, isPdf) => {
         // Cloudinary requires 'raw' for PDFs, but 'image' for photos
         resource_type: isPdf ? 'raw' : 'image', 
         public_id: key, 
-        folder: 'cards' // Note: you might want to change this folder dynamically later
+        folder: 'codesmartng' // Changed folder name for better organization
       },
-      (err, result) => (err ? reject(err) : resolve(result.secure_url))
+      (err, result) => {
+        if (err) {
+          console.error("Cloudinary Upload Error:", err);
+          return reject(err);
+        }
+        resolve(result.secure_url);
+      }
     );
     stream.end(buffer);
   });
@@ -71,6 +79,10 @@ const cloudinarySave = async (buffer, key, isPdf) => {
    ========================================================= */
 export const uploadFile = async (buffer, key, mimeType) => {
   const isPdf = mimeType === 'application/pdf';
+  
+  // Log which driver is being used (visible in Render logs)
+  console.log(`[STORAGE] Uploading ${isPdf ? 'PDF' : 'Image'} using driver: ${env.STORAGE_DRIVER}`);
+
   switch (env.STORAGE_DRIVER) {
     case 's3':
       return s3Save(buffer, key, mimeType);
@@ -95,7 +107,6 @@ export const uploadCardPdf = async (buffer, cardId) => {
 // For Member Controller (Photos)
 export const uploadMemberPhoto = async (buffer, originalName, memberId) => {
   const ext = path.extname(originalName) || '.jpg';
-  // e.g. members/clxyz123/16789012.jpg
   const key = `members/${memberId}/${Date.now()}${ext}`;
   const mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
   return uploadFile(buffer, key, mimeType);
