@@ -24,7 +24,6 @@ export default function CardHistory() {
     setGenerating(paymentId);
     try {
       await api.post(`/payments/${paymentId}/retry-generation`);
-      // Refresh the list to get the new pdfUrl
       fetchPayments();
       alert('PDF generated successfully!');
     } catch (err) {
@@ -34,73 +33,98 @@ export default function CardHistory() {
     }
   };
 
+  const getStatusStyle = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'success': return 'bg-emerald-100 text-emerald-800';
+      case 'pending': return 'bg-amber-100 text-amber-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      default: return 'bg-slate-100 text-slate-800';
+    }
+  };
+
   return (
-    <div className="page">
-      <div className="page__header">
-        <h1>Card History</h1>
-        <Link to="/cards/new" className="btn btn-primary">+ New ID Card</Link>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full font-sans">
+      
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Card History</h1>
+          <p className="text-slate-500 mt-1">View all your ID card payments and downloads.</p>
+        </div>
+        <Link to="/cards/new" className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-sm">
+          + New ID Card
+        </Link>
       </div>
 
-      <div className="data-card">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="table-loading">Loading…</div>
+          <div className="p-12 text-center text-slate-500 animate-pulse font-medium">Loading history...</div>
         ) : payments.length === 0 ? (
-          <div className="empty-state">
-            <h3>No cards yet</h3>
-            <p>You haven't ordered any ID cards.</p>
+          <div className="p-12 text-center flex flex-col items-center justify-center">
+            <div className="text-5xl mb-4">📜</div>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">No cards yet</h3>
+            <p className="text-slate-500 mb-6">You haven't ordered any ID cards.</p>
+            <Link to="/cards/new" className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-lg font-semibold hover:bg-indigo-100 transition">
+              Create your first card
+            </Link>
           </div>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Reference</th>
-                <th>Member</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map((p) => (
-                <tr key={p.id}>
-                  <td>{formatDate(p.createdAt)}</td>
-                  <td className="mono">{p.reference}</td>
-                  <td>
-                    {p.card?.member?.firstName} {p.card?.member?.lastName}
-                  </td>
-                  <td style={{ fontWeight: 'bold' }}>{formatNaira(p.amount)}</td>
-                  <td>
-                    <span className={`status-badge status-badge--${p.status.toLowerCase()}`}>
-                      {p.status}
-                    </span>
-                  </td>
-                  <td>
-                    {p.card?.pdfUrl ? (
-                      <a 
-                        href={p.card.pdfUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="btn-text"
-                        style={{ color: '#10b981', fontWeight: 'bold' }}
-                      >
-                        Download PDF ⬇️
-                      </a>
-                    ) : (
-                      <button 
-                        onClick={() => handleGeneratePdf(p.id)}
-                        disabled={generating === p.id}
-                        className="btn-text"
-                        style={{ color: '#f59e0b', fontWeight: 'bold', cursor: 'pointer', background: 'none', border: 'none' }}
-                      >
-                        {generating === p.id ? 'Generating...' : 'Generate PDF 🔄'}
-                      </button>
-                    )}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Reference</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Member</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {payments.map((p) => (
+                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                      {formatDate(p.createdAt)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-500">
+                      {p.reference}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900">
+                      {p.card?.member?.firstName} {p.card?.member?.lastName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">
+                      {formatNaira(p.amount)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${getStatusStyle(p.status)}`}>
+                        {p.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {p.card?.pdfUrl ? (
+                        <a 
+                          href={p.card.pdfUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-emerald-600 hover:text-emerald-800 font-bold flex items-center gap-1 transition"
+                        >
+                          Download ⬇️
+                        </a>
+                      ) : (
+                        <button 
+                          onClick={() => handleGeneratePdf(p.id)}
+                          disabled={generating === p.id}
+                          className="text-amber-600 hover:text-amber-800 font-bold flex items-center gap-1 disabled:opacity-50 transition"
+                        >
+                          {generating === p.id ? 'Generating...' : 'Generate PDF 🔄'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
