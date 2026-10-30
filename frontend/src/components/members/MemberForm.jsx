@@ -68,7 +68,6 @@ export default function MemberForm({
     e.preventDefault();
     if (!validate()) return;
 
-    // Convert to payload — controller accepts JSON. Photo upload is separate endpoint.
     const payload = {
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim(),
@@ -81,11 +80,21 @@ export default function MemberForm({
     onSubmit(payload, form.photo);
   };
 
+  // Reusable input class string
+  const inputClass = (hasError) => 
+    `w-full px-4 py-2.5 rounded-lg border text-slate-900 bg-white focus:ring-2 outline-none transition disabled:bg-slate-50 disabled:text-slate-500 ${
+      hasError 
+        ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+        : 'border-slate-300 focus:ring-indigo-500 focus:border-indigo-500'
+    }`;
+
   return (
-    <form className="member-form" onSubmit={handleSubmit} noValidate>
-      <div className="member-form__grid">
-        {/* Left: photo */}
-        <div className="member-form__photo">
+    <form className="w-full" onSubmit={handleSubmit} noValidate>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        {/* Left: Photo */}
+        <div className="md:col-span-1">
+          <label className="block text-sm font-semibold text-slate-700 mb-3">Member Photo</label>
           <ImageUploader
             value={form.photoPreview}
             onChange={handlePhoto}
@@ -93,41 +102,44 @@ export default function MemberForm({
           />
         </div>
 
-        {/* Right: fields */}
-        <div className="member-form__fields">
-          <div className="form-row">
-            <div className="form-field">
-              <label htmlFor="firstName">First Name *</label>
+        {/* Right: Fields */}
+        <div className="md:col-span-2 flex flex-col gap-6">
+          
+          {/* Row 1 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label htmlFor="firstName" className="block text-sm font-semibold text-slate-700 mb-1">First Name *</label>
               <input
                 id="firstName"
                 name="firstName"
                 value={form.firstName}
                 onChange={handleChange}
                 disabled={submitting}
-                className={errors.firstName ? 'input-error' : ''}
+                className={inputClass(errors.firstName)}
                 placeholder="John"
               />
-              {errors.firstName && <span className="field-error">{errors.firstName}</span>}
+              {errors.firstName && <span className="text-red-500 text-xs mt-1 block">{errors.firstName}</span>}
             </div>
 
-            <div className="form-field">
-              <label htmlFor="lastName">Last Name *</label>
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-semibold text-slate-700 mb-1">Last Name *</label>
               <input
                 id="lastName"
                 name="lastName"
                 value={form.lastName}
                 onChange={handleChange}
                 disabled={submitting}
-                className={errors.lastName ? 'input-error' : ''}
+                className={inputClass(errors.lastName)}
                 placeholder="Doe"
               />
-              {errors.lastName && <span className="field-error">{errors.lastName}</span>}
+              {errors.lastName && <span className="text-red-500 text-xs mt-1 block">{errors.lastName}</span>}
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-field">
-              <label htmlFor="email">Email</label>
+          {/* Row 2 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
               <input
                 id="email"
                 name="email"
@@ -135,14 +147,14 @@ export default function MemberForm({
                 value={form.email}
                 onChange={handleChange}
                 disabled={submitting}
-                className={errors.email ? 'input-error' : ''}
+                className={inputClass(errors.email)}
                 placeholder="john@company.com"
               />
-              {errors.email && <span className="field-error">{errors.email}</span>}
+              {errors.email && <span className="text-red-500 text-xs mt-1 block">{errors.email}</span>}
             </div>
 
-            <div className="form-field">
-              <label htmlFor="phone">Phone</label>
+            <div>
+              <label htmlFor="phone" className="block text-sm font-semibold text-slate-700 mb-1">Phone</label>
               <input
                 id="phone"
                 name="phone"
@@ -150,34 +162,37 @@ export default function MemberForm({
                 value={form.phone}
                 onChange={handleChange}
                 disabled={submitting}
-                className={errors.phone ? 'input-error' : ''}
+                className={inputClass(errors.phone)}
                 placeholder="+2348012345678"
               />
-              {errors.phone && <span className="field-error">{errors.phone}</span>}
+              {errors.phone && <span className="text-red-500 text-xs mt-1 block">{errors.phone}</span>}
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-field">
-              <label htmlFor="position">Position</label>
+          {/* Row 3 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label htmlFor="position" className="block text-sm font-semibold text-slate-700 mb-1">Position</label>
               <input
                 id="position"
                 name="position"
                 value={form.position}
                 onChange={handleChange}
                 disabled={submitting}
+                className={inputClass(false)}
                 placeholder="Software Engineer"
               />
             </div>
 
-            <div className="form-field">
-              <label htmlFor="department">Department</label>
+            <div>
+              <label htmlFor="department" className="block text-sm font-semibold text-slate-700 mb-1">Department</label>
               <input
                 id="department"
                 name="department"
                 value={form.department}
                 onChange={handleChange}
                 disabled={submitting}
+                className={inputClass(false)}
                 placeholder="Engineering"
               />
             </div>
@@ -185,13 +200,23 @@ export default function MemberForm({
         </div>
       </div>
 
-      <div className="member-form__actions">
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-slate-200">
         {onCancel && (
-          <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={submitting}>
+          <button 
+            type="button" 
+            className="px-5 py-2.5 rounded-lg font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition disabled:opacity-50" 
+            onClick={onCancel} 
+            disabled={submitting}
+          >
             Cancel
           </button>
         )}
-        <button type="submit" className="btn btn-primary" disabled={submitting}>
+        <button 
+          type="submit" 
+          className="px-5 py-2.5 rounded-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm disabled:opacity-50" 
+          disabled={submitting}
+        >
           {submitting ? 'Saving…' : submitLabel}
         </button>
       </div>
