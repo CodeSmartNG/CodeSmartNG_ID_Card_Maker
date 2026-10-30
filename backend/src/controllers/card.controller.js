@@ -30,17 +30,16 @@ export const createCard = asyncHandler(async (req, res) => {
   const verificationId = randomBytes(16).toString('hex');
 
   const card = await prisma.iDCard.create({
-    data: {
-      cardNumber,
-      verificationId,
-      status: 'DRAFT',
-      memberId,
-      organizationId,
-    },
-    include: { member: true },
-  });
-
-  res.status(201).json({ card });
+  data: {
+    cardNumber,
+    verificationId,
+    status: 'DRAFT',
+    memberId,
+    organizationId,
+    // 👇 ADD THIS LINE
+    expiresAt: new Date(new Date().setFullYear(new Date().getFullYear() + 2)),
+  },
+  include: { member: true },
 });
 
 /* ────────────── PREVIEW PDF ────────────── */
