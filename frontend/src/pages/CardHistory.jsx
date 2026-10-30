@@ -45,6 +45,7 @@ export default function CardHistory() {
                 <th>Member</th>
                 <th>Amount</th>
                 <th>Status</th>
+                <th>Action</th> {/* <-- ADDED HEADER */}
               </tr>
             </thead>
             <tbody>
@@ -60,6 +61,22 @@ export default function CardHistory() {
                     <span className={`status-badge status-badge--${p.status.toLowerCase()}`}>
                       {p.status}
                     </span>
+                  </td>
+                  {/* <-- ADDED ACTION CELL */}
+                  <td>
+                    {p.card?.pdfUrl ? (
+                      <a 
+                        href={p.card.pdfUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="btn-text"
+                        style={{ fontWeight: 'bold' }}
+                      >
+                        Download PDF ⬇️
+                      </a>
+                    ) : (
+                      <span className="muted">Not ready</span>
+                    )}
                   </td>
                 </tr>
               ))}
