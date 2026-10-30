@@ -35,7 +35,7 @@ export const generateCardPdf = async ({ card, member, organization }) => {
     x: 15, y: 6, size: 8, font: font, color: rgb(1, 1, 1),
   });
 
-  // If you want to add the Member's Photo, we can embed it here!
+  // Photo Embed
   if (member.photoUrl && member.photoUrl.startsWith('http')) {
     try {
       const photoResponse = await fetch(member.photoUrl);
@@ -50,7 +50,15 @@ export const generateCardPdf = async ({ card, member, organization }) => {
   const pdfBytes = await pdfDoc.save();
   const buffer = Buffer.from(pdfBytes);
 
-  // Save to Cloudinary (or local)
   const pdfUrl = await uploadCardPdf(buffer, card.id);
   return { buffer, pdfUrl };
+};
+
+// 👇 ADD THIS FUNCTION BACK SO THE CONTROLLER DOESN'T CRASH
+export const generateCardPreview = async (data) => {
+  const result = await generateCardPdf(data);
+  return {
+    pdfBase64: result.buffer.toString('base64'),
+    template: 'classic',
+  };
 };
