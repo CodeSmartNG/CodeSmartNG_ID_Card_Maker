@@ -6,16 +6,27 @@ export const generateMemberId = async (organizationId) => {
     where: { id: organizationId },
     select: { slug: true },
   });
-  
-  const prefix = org.slug.toUpperCase().slice(0, 6);
-  const year = new Date().getFullYear();
 
-  // 2. Count existing members for this org this year
-  const count = await prisma.member.count({
-    where: { organizationId },
+  const prefix = (org?.slug || 'ORG').toUpperCase().slice(0, 6);
+  const year = new Date().getFullYear();
+  const pattern = `${prefix}-${year}-`;
+
+  // 2. Find the last member number created this year (max, not count!)
+  const lastMember = await prisma.member.findFirst({
+    where: {
+      organizationId,
+      memberNumber: { startsWith: pattern },
+    },
+    orderBy: { memberNumber: 'desc' },
+    select: { memberNumber: true },
   });
 
-  // 3. Format: ACMEC-2025-0001
-  const seq = String(count + 1).padStart(4, '0');
-  return `${prefix}-${year}-${seq}`;
+  // 3. Calculate the next sequence
+  let nextSeq = 1;
+  if (lastMember) {
+    const lastSeq = parseInt(lastMember.memberNumber.replace(pattern, ''), 10);
+    if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
+  }
+
+  return `${pattern}${String(nextSeq).padStart(4, '0')}`;
 };
