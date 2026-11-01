@@ -1,5 +1,6 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { prisma } from '../config/database.js';
+import { uploadMemberPhoto } from '../services/storageService.js';
 
 export const updateOrganization = asyncHandler(async (req, res) => {
   const { name, email, phone, address, website } = req.body;
@@ -16,8 +17,6 @@ export const updateOrganization = asyncHandler(async (req, res) => {
 export const uploadLogo = asyncHandler(async (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'No logo uploaded' });
   
-  // Assuming you have an upload file helper in storageService
-  const { uploadMemberPhoto } = await import('../services/storageService.js');
   const logoUrl = await uploadMemberPhoto(req.file.buffer, req.file.originalname, req.user.organizationId);
 
   const organization = await prisma.organization.update({
