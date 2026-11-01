@@ -37,7 +37,7 @@ export default function EditMember() {
         }
       }
 
-      toast.success('Member updated');
+      toast.success('Member updated successfully');
       navigate('/members');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Update failed');
@@ -46,20 +46,29 @@ export default function EditMember() {
     }
   };
 
-  if (loading) return <div className="page"><div className="table-loading">Loading…</div></div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-slate-400 font-medium animate-pulse">Loading member details...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="page">
-      <div className="page__header">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full font-sans">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          <h1>Edit Member</h1>
-          <p className="page__subtitle">
-            {member?.firstName} {member?.lastName} · {member?.memberNumber}
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Edit Member</h1>
+          <p className="text-slate-500 mt-1">
+            Updating <span className="font-semibold text-indigo-600">{member?.firstName} {member?.lastName}</span> · <span className="font-mono text-xs">{member?.memberNumber}</span>
           </p>
         </div>
       </div>
 
-      <div className="data-card data-card--padded">
+      {/* Form Card */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
         <MemberForm
           initialData={member}
           onSubmit={handleSubmit}
@@ -68,6 +77,7 @@ export default function EditMember() {
           onCancel={() => navigate('/members')}
         />
       </div>
+      
     </div>
   );
 }
