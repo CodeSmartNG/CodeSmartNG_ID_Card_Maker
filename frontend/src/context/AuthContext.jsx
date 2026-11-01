@@ -50,7 +50,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    // 👇 I ADDED setUser HERE so the Organization page can update the app state
+    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
