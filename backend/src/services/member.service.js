@@ -45,7 +45,7 @@ export const getMember = async ({ id, organizationId }) => {
 
 /* ────────────── CREATE ────────────── */
 export const createMember = async ({ data, organizationId }) => {
-  // Check for duplicate email within the same org (optional)
+  // 1. Check for duplicate email within the same org
   if (data.email) {
     const exists = await prisma.member.findFirst({
       where: { email: data.email, organizationId },
@@ -53,18 +53,35 @@ export const createMember = async ({ data, organizationId }) => {
     if (exists) throw new ApiError(409, 'A member with this email already exists');
   }
 
-  // Generate the next sequential member number for this org
-  const memberNumber = await generateMemberId(organizationId);
+  // 2. Retry up to 3 times if member number collision occurs
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const memberNumber = await generateMemberId(organizationId);
 
-  const member = await prisma.member.create({
-    data: {
-      ...data,
-      memberNumber,
-      organizationId,
-    },
-  });
+      const member = await prisma.member.create({
+        data: {
+          ...data,
+          memberNumber,
+          organizationId,
+        },
+      });
 
-  return member;
+      return member;
+    } catch (err) {
+      // P2002 = unique constraint violation (member number already exists)
+      if (err.code === 'P2002') {
+        lastError = err;
+        // Wait 50ms before retrying to avoid another collision
+        await new Promise((r) => setTimeout(r, 50));
+        continue;
+      }
+      // If it's a different error, throw it immediately
+      throw err;
+    }
+  }
+
+  throw new ApiError(500, 'Failed to generate a unique member ID. Please try again.');
 };
 
 /* ────────────── UPDATE ────────────── */
@@ -96,7 +113,6 @@ export const deleteMember = async ({ id, organizationId }) => {
   });
   if (!existing) throw new ApiError(404, 'Member not found');
 
-  // Note: Cascade deletes on IDCard will handle any attached cards
   await prisma.member.delete({ where: { id } });
 };
 
