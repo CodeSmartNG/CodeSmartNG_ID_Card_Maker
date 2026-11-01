@@ -22,6 +22,8 @@ const PaymentSuccess = lazy(() => import('../pages/PaymentSuccess'));
 const CardHistory = lazy(() => import('../pages/CardHistory'));
 const VerifyCard = lazy(() => import('../pages/VerifyCard')); // 👈 MAKE SURE THIS IS HERE
 const NotFound = lazy(() => import('../pages/NotFound'));
+const OrganizationProfile = lazy(() => import('../pages/OrganizationProfile'));
+
 
 
 /* =========================================================
@@ -71,7 +73,8 @@ export const router = createBrowserRouter([
       { path: '/cards/new', element: wrap(<CardDesigner />) },
       { path: '/cards/pay/:cardId', element: wrap(<CardPayment />) },
       { path: '/cards/history', element: wrap(<CardHistory />) },
-       { path: '/verify/:id', element: wrap(<VerifyCard />) },
+      { path: '/verify/:id', element: wrap(<VerifyCard />) },
+      { path: '/organization', element: wrap(<OrganizationProfile />) },
     ]
   },
 
