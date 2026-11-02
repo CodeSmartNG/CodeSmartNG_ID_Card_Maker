@@ -101,3 +101,12 @@ export const uploadPhoto = asyncHandler(async (req, res) => {
 
   res.json({ photoUrl: member.photoUrl, member });
 });
+
+export const bulkCreateMembers = asyncHandler(async (req, res) => {
+  const result = await memberService.bulkCreateMembers({
+    data: req.body,
+    organizationId: req.user.organizationId,
+  });
+
+  res.status(201).json(result);
+});
