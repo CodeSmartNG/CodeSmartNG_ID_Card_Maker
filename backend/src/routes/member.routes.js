@@ -6,57 +6,26 @@ import {
   createMemberSchema, 
   updateMemberSchema, 
   listMembersSchema,
-  bulkCreateMemberSchema // 👈 Combined into one import
+  bulkCreateMemberSchema 
 } from '../validations/member.validation.js';
 import { z } from 'zod';
 import multer from 'multer';
 
-// Configure multer for memory storage (5MB limit)
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Only image files are allowed'));
-  },
-});
-
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const idParam = z.object({ id: z.string().min(1) });
 
 const router = Router();
-
-// All member routes require authentication
 router.use(requireAuth);
 
-// 1. List
 router.get('/', validateQuery(listMembersSchema), ctrl.listMembers);
-
-// 2. Create (Single)
 router.post('/', validateBody(createMemberSchema), ctrl.createMember);
 
-// 3. Bulk Create (CSV Import) - MUST BE ABOVE /:id ROUTES
+// 👇 BULK ROUTE MUST BE HERE
 router.post('/bulk', validateBody(bulkCreateMemberSchema), ctrl.bulkCreateMembers);
 
-// 4. Get one
 router.get('/:id', validateParams(idParam), ctrl.getMember);
-
-// 5. Update
-router.put(
-  '/:id',
-  validateParams(idParam),
-  validateBody(updateMemberSchema),
-  ctrl.updateMember
-);
-
-// 6. Delete
+router.put('/:id', validateParams(idParam), validateBody(updateMemberSchema), ctrl.updateMember);
 router.delete('/:id', validateParams(idParam), ctrl.deleteMember);
-
-// 7. Upload photo
-router.post(
-  '/:id/photo',
-  validateParams(idParam),
-  upload.single('photo'),
-  ctrl.uploadPhoto
-);
+router.post('/:id/photo', validateParams(idParam), upload.single('photo'), ctrl.uploadPhoto);
 
 export default router;
