@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/useToast';
 import { memberService } from '../services/memberService';
@@ -7,11 +7,13 @@ import { formatDate, initials } from '../utils/formatters';
 export default function Members() {
   const navigate = useNavigate();
   const toast = useToast();
+  const fileInputRef = useRef(null);
 
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [deleting, setDeleting] = useState(null);
+  const [importing, setImporting] = useState(false);
   const [meta, setMeta] = useState({ page: 1, limit: 20, total: 0, pages: 1 });
 
   const load = useCallback(
@@ -34,7 +36,6 @@ export default function Members() {
     [search, toast]
   );
 
-  // Debounced search
   useEffect(() => {
     const t = setTimeout(() => load(1), 300);
     return () => clearTimeout(t);
@@ -54,25 +55,83 @@ export default function Members() {
     }
   };
 
+  // 👇 CSV Import Logic
+  const handleCsvUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const reader = new FileReader();
+    
+    reader.onload = async (event) => {
+      try {
+        const csvText = event.target.result;
+        // Simple CSV parser (splits by newline, then by comma)
+        const lines = csvText.split('\n').map((line) => line.trim()).filter(Boolean);
+        const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+        
+        const parsedData = lines.slice(1).map((line) => {
+          const values = line.split(',').map((v) => v.trim());
+          const row = {};
+          headers.forEach((header, index) => {
+            row[header] = values[index] || '';
+          });
+          return row;
+        });
+
+        // Send to backend
+        const { data } = await memberService.bulkCreate(parsedData);
+        toast.success(`Imported ${data.successCount} members successfully!`);
+        
+        // Refresh the list
+        load(1);
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Failed to import CSV');
+      } finally {
+        setImporting(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+
+    reader.readAsText(file);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full font-sans">
       
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Members</h1>
           <p className="text-slate-500 mt-1">{meta.total} total members in your organization</p>
         </div>
-        <Link 
-          to="/members/new" 
-          className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-sm flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-          Add Member
-        </Link>
+        
+        {/* 👇 New Buttons Area */}
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <input 
+            type="file" 
+            accept=".csv" 
+            ref={fileInputRef} 
+            onChange={handleCsvUpload} 
+            className="hidden" 
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+            className="flex-1 sm:flex-none px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition shadow-sm disabled:opacity-50"
+          >
+            {importing ? 'Importing...' : 'Import CSV'}
+          </button>
+          <Link 
+            to="/members/new" 
+            className="flex-1 sm:flex-none px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-sm flex items-center justify-center gap-2"
+          >
+            + Add Member
+          </Link>
+        </div>
       </div>
 
-      {/* ── Search Bar ── */}
+      {/* Search Bar */}
       <div className="relative mb-6">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -88,7 +147,7 @@ export default function Members() {
         />
       </div>
 
-      {/* ── Data Table ── */}
+      {/* Data Table (Same as before) */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-slate-500 animate-pulse font-medium">Loading members...</div>
@@ -100,14 +159,9 @@ export default function Members() {
             </h3>
             <p className="text-slate-500 mb-6 max-w-sm">
               {search 
-                ? 'Try adjusting your search terms to find who you are looking for.' 
-                : 'Add your first member to start designing and printing ID cards.'}
+                ? 'Try adjusting your search terms.' 
+                : 'Add your first member or upload a CSV to get started.'}
             </p>
-            {!search && (
-              <Link to="/members/new" className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-lg font-semibold hover:bg-indigo-100 transition">
-                Add Your First Member
-              </Link>
-            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -138,28 +192,19 @@ export default function Members() {
                           <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
                             {m.firstName} {m.lastName}
                           </div>
-                          <div className="text-xs text-slate-500 mt-0.5">{m.email || 'No email provided'}</div>
+                          <div className="text-xs text-slate-500 mt-0.5">{m.email || 'No email'}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-600">
-                      {m.memberNumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                      {m.position || <span className="text-slate-300">—</span>}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                      {m.department || <span className="text-slate-300">—</span>}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                      {formatDate(m.createdAt)}
-                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-600">{m.memberNumber}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{m.position || '—'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{m.department || '—'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{formatDate(m.createdAt)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-3 md:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => navigate(`/members/${m.id}/edit`)}
                           className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors"
-                          title="Edit"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </button>
@@ -167,13 +212,8 @@ export default function Members() {
                           onClick={() => handleDelete(m.id)}
                           disabled={deleting === m.id}
                           className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors disabled:opacity-50"
-                          title="Delete"
                         >
-                          {deleting === m.id ? (
-                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                          ) : (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                          )}
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                       </div>
                     </td>
@@ -184,11 +224,11 @@ export default function Members() {
           </div>
         )}
 
-        {/* ── Pagination ── */}
+        {/* Pagination */}
         {!loading && meta.pages > 1 && (
           <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
             <button
-              className="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
+              className="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50"
               disabled={meta.page <= 1}
               onClick={() => load(meta.page - 1)}
             >
@@ -198,7 +238,7 @@ export default function Members() {
               Page <span className="text-slate-900">{meta.page}</span> of <span className="text-slate-900">{meta.pages}</span>
             </span>
             <button
-              className="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
+              className="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50"
               disabled={meta.page >= meta.pages}
               onClick={() => load(meta.page + 1)}
             >
