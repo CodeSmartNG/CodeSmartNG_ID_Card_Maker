@@ -7,7 +7,7 @@ import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import { issueRefund } from '../services/refund.service.js';
 import { reconcilePendingPayments } from '../services/reconciliation.service.js';
-import { generateCardPdf } from '../services/cardGenerator.js'; // 👈 Import the PDF generator
+import { generateCardPdf } from '../services/cardGenerator.js';
 
 /* =========================================================
    CONSTANTS
@@ -150,7 +150,7 @@ export const paystackWebhook = async (req, res) => {
     res.sendStatus(200);
   } catch (err) {
     logger.error({ err }, 'Webhook handler error');
-    res.sendStatus(200); // Always ack Paystack
+    res.sendStatus(200);
   }
 };
 
@@ -168,7 +168,7 @@ export const refundPayment = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-/* POST /api/payments/:id/retry-generation - NOW SYNCHRONOUS */
+/* POST /api/payments/:id/retry-generation - ALLOWS REGENERATION */
 export const retryCardGeneration = asyncHandler(async (req, res) => {
   const payment = await prisma.payment.findFirst({
     where: { id: req.params.id, organizationId: req.user.organizationId },
@@ -177,7 +177,8 @@ export const retryCardGeneration = asyncHandler(async (req, res) => {
 
   if (!payment) throw new ApiError(404, 'Payment not found');
   if (payment.status !== 'SUCCESS') throw new ApiError(409, 'Only successful payments can trigger generation');
-  if (['GENERATED', 'PRINTED'].includes(payment.card.status)) throw new ApiError(409, 'Card already generated');
+  
+  // 👇 REMOVED the "Card already generated" check. Now it can overwrite the old PDF.
   if (payment.card.status === 'REVOKED') throw new ApiError(409, 'Card is revoked');
 
   try {
@@ -208,7 +209,7 @@ export const reconcilePayments = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-/* GET /api/payments - ADDED pdfUrl: true */
+/* GET /api/payments - INCLUDES pdfUrl */
 export const listPayments = asyncHandler(async (req, res) => {
   const { page = 1, limit = 20, status } = req.query;
   const where = { organizationId: req.user.organizationId, ...(status && { status }) };
@@ -222,7 +223,7 @@ export const listPayments = asyncHandler(async (req, res) => {
             id: true,
             cardNumber: true,
             status: true,
-            pdfUrl: true, // 👈 CRITICAL: This allows the frontend to show the Download button
+            pdfUrl: true, // 👈 Allows the frontend to show the Download button
             member: { select: { firstName: true, lastName: true, memberNumber: true } },
           },
         },
@@ -307,12 +308,11 @@ const handleRefundProcessed = async (data) => {
   });
 };
 
-/* FINALIZE SUCCESS - NOW SYNCHRONOUS */
 const finalizeSuccess = async (paymentId, paidAt = new Date()) => {
   const result = await prisma.$transaction(async (tx) => {
     const payment = await tx.payment.findUnique({
       where: { id: paymentId },
-      include: { card: { include: { member: true, organization: true } } }, // Include relations for PDF!
+      include: { card: { include: { member: true, organization: true } } },
     });
 
     if (!payment) return { ok: false, reason: 'not_found' };
@@ -326,7 +326,6 @@ const finalizeSuccess = async (paymentId, paidAt = new Date()) => {
 
   if (!result.ok || result.reason !== 'new') return;
 
-  // Generate PDF right now (No Redis/BullMQ needed!)
   try {
     logger.info({ cardId: result.payment.cardId }, 'Synchronously generating PDF...');
     
