@@ -55,8 +55,9 @@ export default function Members() {
     }
   };
 
-  // 👇 ROBUST CSV Import Logic
-  // 👇 ROBUST CSV Import Logic
+  
+  
+// 👇 SMART CSV Import Logic (Handles Commas & Semicolons)
 const handleCsvUpload = (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
@@ -68,50 +69,59 @@ const handleCsvUpload = (e) => {
     try {
       const csvText = event.target.result;
       
-      // 1. Split by newlines and remove empty lines
+      // 1. Split into lines
       const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
       
       if (lines.length < 2) {
         throw new Error('Your CSV file is empty or missing data rows.');
       }
 
-      // 2. Extract and clean headers (removes invisible BOM characters from Excel)
-      const headers = lines[0].split(',').map((h) => 
-        h.replace(/[\u200B-\u200D\uFEFF]/g, '').trim().toLowerCase().replace(/[^a-z]/g, '')
+      // 2. Auto-detect separator (comma or semicolon)
+      const firstLine = lines[0];
+      const separator = firstLine.includes(';') ? ';' : ',';
+
+      // 3. Extract and clean headers
+      const headers = firstLine.split(separator).map((h) => 
+        h.replace(/[\u200B-\u200D\uFEFF]/g, '').trim().toLowerCase()
       );
       
       const parsedData = lines.slice(1).map((line) => {
-        // Handle simple quoted CSV values
-        const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',').map(v => v.trim());
+        const values = line.split(separator).map((v) => v.trim().replace(/^"|"$/g, '')); // Remove quotes
         
         const row = {};
         headers.forEach((header, index) => {
-          const cleanValue = (values[index] || '').replace(/^"|"$/g, '').trim(); // Strip quotes
+          // Normalize header names
+          let key = header.replace(/\s+/g, ''); // Remove spaces
+          if (key === 'firstname') key = 'firstName';
+          else if (key === 'lastname') key = 'lastName';
+          else if (key === 'email' || key === 'emailaddress') key = 'email';
+          else if (key === 'phone' || key === 'phonenumber') key = 'phone';
+          else if (key === 'position' || key === 'jobtitle') key = 'position';
+          else if (key === 'department' || key === 'dept') key = 'department';
+          else if (key === 'address') key = 'address';
+          else if (key === 'tin') key = 'tin';
+          else if (key === 'nin') key = 'nin';
 
-          let key = header;
-          if (header === 'firstname') key = 'firstName';
-          else if (header === 'lastname') key = 'lastName';
-          else if (header === 'email' || header === 'emailaddress') key = 'email';
-          else if (header === 'phone' || header === 'phonenumber') key = 'phone';
-          else if (header === 'position' || header === 'jobtitle') key = 'position';
-          else if (header === 'department' || header === 'dept') key = 'department';
-          else if (header === 'address') key = 'address';
-          else if (header === 'tin') key = 'tin';
-          else if (header === 'nin') key = 'nin';
-
-          row[key] = cleanValue;
+          row[key] = values[index] || '';
         });
         return row;
       });
 
-      // 3. Send to backend
+      console.log("📊 Parsed CSV Data:", parsedData); // For debugging
+
+      // 4. Send to backend
       const { data } = await memberService.bulkCreate(parsedData);
-      toast.success(`Imported ${data.successCount} members successfully!`);
       
-      load(1);
+      // 5. Show the correct message based on how many actually saved
+      if (data.successCount > 0) {
+        toast.success(`Imported ${data.successCount} members successfully!`);
+        load(1); // Refresh the list
+      } else {
+        toast.error(`Imported 0 members. Please check your CSV headers.`);
+      }
+      
     } catch (err) {
-      // Show the EXACT Zod error in the console so we can debug if it fails again
-      console.error("CSV Error:", err.response?.data || err);
+      console.error("CSV Error Details:", err.response?.data || err);
       toast.error(err.response?.data?.message || err.message || 'Failed to import CSV');
     } finally {
       setImporting(false);
