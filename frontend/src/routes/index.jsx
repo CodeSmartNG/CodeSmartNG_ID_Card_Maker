@@ -2,12 +2,11 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import DashboardLayout from '../components/layout/DashboardLayout'; // 👈 Import the new Layout
 
 /* =========================================================
    1. LAZY LOAD PAGES
    ========================================================= */
-
-
 
 const Home = lazy(() => import('../pages/Home'));
 const Login = lazy(() => import('../pages/Login'));
@@ -20,11 +19,9 @@ const CardDesigner = lazy(() => import('../pages/CardDesigner'));
 const CardPayment = lazy(() => import('../pages/CardPayment'));
 const PaymentSuccess = lazy(() => import('../pages/PaymentSuccess'));
 const CardHistory = lazy(() => import('../pages/CardHistory'));
-const VerifyCard = lazy(() => import('../pages/VerifyCard')); // 👈 MAKE SURE THIS IS HERE
+const VerifyCard = lazy(() => import('../pages/VerifyCard')); 
 const NotFound = lazy(() => import('../pages/NotFound'));
 const OrganizationProfile = lazy(() => import('../pages/OrganizationProfile'));
-
-
 
 /* =========================================================
    2. PROTECTED ROUTE WRAPPER
@@ -33,7 +30,7 @@ function ProtectedRoute() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center font-sans">Loading...</div>;
   }
 
   if (!user) {
@@ -47,7 +44,7 @@ function ProtectedRoute() {
    3. SUSPENSE WRAPPER
    ========================================================= */
 const wrap = (el) => (
-  <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>}>
+  <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-sans text-slate-500">Loading...</div>}>
     {el}
   </Suspense>
 );
@@ -61,20 +58,27 @@ export const router = createBrowserRouter([
   { path: '/login', element: wrap(<Login />) },
   { path: '/register', element: wrap(<Register />) },
   { path: '/payment/success', element: wrap(<PaymentSuccess />) },
+  
+  // 👈 Moved VerifyCard here so security guards can scan cards without logging in
+  { path: '/verify/:id', element: wrap(<VerifyCard />) }, 
 
-  /* --- PROTECTED ROUTES (Require Login) --- */
+  /* --- PROTECTED ROUTES (Require Login & Use Dashboard Layout) --- */
   { 
     element: <ProtectedRoute />,
     children: [
-      { path: '/dashboard', element: wrap(<Dashboard />) },
-      { path: '/members', element: wrap(<Members />) },
-      { path: '/members/new', element: wrap(<AddMember />) },
-      { path: '/members/:id/edit', element: wrap(<EditMember />) },
-      { path: '/cards/new', element: wrap(<CardDesigner />) },
-      { path: '/cards/pay/:cardId', element: wrap(<CardPayment />) },
-      { path: '/cards/history', element: wrap(<CardHistory />) },
-      { path: '/verify/:id', element: wrap(<VerifyCard />) },
-      { path: '/organization', element: wrap(<OrganizationProfile />) },
+      {
+        element: <DashboardLayout />, // 👈 This wraps all pages below with the Sidebar/Bottom Nav
+        children: [
+          { path: '/dashboard', element: wrap(<Dashboard />) },
+          { path: '/members', element: wrap(<Members />) },
+          { path: '/members/new', element: wrap(<AddMember />) },
+          { path: '/members/:id/edit', element: wrap(<EditMember />) },
+          { path: '/cards/new', element: wrap(<CardDesigner />) },
+          { path: '/cards/pay/:cardId', element: wrap(<CardPayment />) },
+          { path: '/cards/history', element: wrap(<CardHistory />) },
+          { path: '/organization', element: wrap(<OrganizationProfile />) },
+        ]
+      }
     ]
   },
 
