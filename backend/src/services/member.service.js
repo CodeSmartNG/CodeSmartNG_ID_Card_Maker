@@ -72,16 +72,90 @@ export const createMember = async ({ data, organizationId }) => {
       // P2002 = unique constraint violation (member number already exists)
       if (err.code === 'P2002') {
         lastError = err;
-        // Wait 50ms before retrying to avoid another collision
         await new Promise((r) => setTimeout(r, 50));
         continue;
       }
-      // If it's a different error, throw it immediately
       throw err;
     }
   }
 
   throw new ApiError(500, 'Failed to generate a unique member ID. Please try again.');
+};
+
+/* ────────────── BULK CREATE (CSV Import) ────────────── */
+export const bulkCreateMembers = async ({ data, organizationId }) => {
+  // 1. Get org prefix for member numbers
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { slug: true },
+  });
+
+  const prefix = (org?.slug || 'ORG').toUpperCase().slice(0, 6);
+  const year = new Date().getFullYear();
+  const pattern = `${prefix}-${year}-`;
+
+  // 2. Find the highest existing member number this year so we know where to start
+  const lastMember = await prisma.member.findFirst({
+    where: { organizationId, memberNumber: { startsWith: pattern } },
+    orderBy: { memberNumber: 'desc' },
+    select: { memberNumber: true },
+  });
+
+  let nextSeq = 1;
+  if (lastMember) {
+    const lastSeq = parseInt(lastMember.memberNumber.replace(pattern, ''), 10);
+    if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
+  }
+
+  // 3. Prepare the data
+  const membersToCreate = [];
+  const errors = [];
+
+  for (const row of data) {
+    if (!row.firstName || !row.lastName) {
+      errors.push(`Skipped: Missing name for row starting with ${row.email || 'unknown email'}`);
+      continue;
+    }
+
+    const memberNumber = `${pattern}${String(nextSeq).padStart(4, '0')}`;
+    nextSeq++;
+
+    membersToCreate.push({
+      firstName: row.firstName.trim(),
+      lastName: row.lastName.trim(),
+      email: row.email?.trim() || null, // Convert empty strings to null
+      phone: row.phone?.trim() || null,
+      position: row.position?.trim() || null,
+      department: row.department?.trim() || null,
+      address: row.address?.trim() || null,
+      tin: row.tin?.trim() || null,
+      nin: row.nin?.trim() || null,
+      memberNumber,
+      organizationId,
+    });
+  }
+
+  // 4. Insert all members at once
+  let successCount = 0;
+  if (membersToCreate.length > 0) {
+    try {
+      // skipDuplicates prevents errors if the exact same memberNumber is somehow generated
+      const result = await prisma.member.createMany({
+        data: membersToCreate,
+        skipDuplicates: true, 
+      });
+      successCount = result.count;
+    } catch (err) {
+      console.error('Bulk Insert Error:', err);
+      throw new ApiError(500, 'Failed to insert members into the database.');
+    }
+  }
+
+  return { 
+    successCount, 
+    skippedCount: data.length - successCount,
+    errors 
+  };
 };
 
 /* ────────────── UPDATE ────────────── */
