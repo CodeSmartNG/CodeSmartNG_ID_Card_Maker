@@ -55,7 +55,7 @@ export default function Members() {
     }
   };
 
-  // 👇 CSV Import Logic
+  // 👇 ROBUST CSV Import Logic
   const handleCsvUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -66,27 +66,50 @@ export default function Members() {
     reader.onload = async (event) => {
       try {
         const csvText = event.target.result;
-        // Simple CSV parser (splits by newline, then by comma)
-        const lines = csvText.split('\n').map((line) => line.trim()).filter(Boolean);
-        const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+        
+        // 1. Split by newlines (handles both \n and \r\n) and remove empty lines
+        const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+        
+        if (lines.length < 2) {
+          throw new Error('Your CSV file is empty or missing data rows.');
+        }
+
+        // 2. Extract and normalize headers
+        const headers = lines[0].split(',').map((h) => h.trim());
         
         const parsedData = lines.slice(1).map((line) => {
           const values = line.split(',').map((v) => v.trim());
           const row = {};
+          
           headers.forEach((header, index) => {
-            row[header] = values[index] || '';
+            // Clean up the header: lowercase, remove spaces and special characters
+            const cleanHeader = header.toLowerCase().replace(/[^a-z]/g, '');
+            
+            let key = cleanHeader;
+            // Map common variations to the exact backend fields
+            if (cleanHeader === 'firstname') key = 'firstName';
+            else if (cleanHeader === 'lastname') key = 'lastName';
+            else if (cleanHeader === 'email' || cleanHeader === 'emailaddress') key = 'email';
+            else if (cleanHeader === 'phone' || cleanHeader === 'phonenumber') key = 'phone';
+            else if (cleanHeader === 'position' || cleanHeader === 'jobtitle') key = 'position';
+            else if (cleanHeader === 'department' || cleanHeader === 'dept') key = 'department';
+            else if (cleanHeader === 'address') key = 'address';
+            else if (cleanHeader === 'tin') key = 'tin';
+            else if (cleanHeader === 'nin') key = 'nin';
+
+            row[key] = values[index] || '';
           });
           return row;
         });
 
-        // Send to backend
+        // 3. Send to backend
         const { data } = await memberService.bulkCreate(parsedData);
         toast.success(`Imported ${data.successCount} members successfully!`);
         
         // Refresh the list
         load(1);
       } catch (err) {
-        toast.error(err.response?.data?.message || 'Failed to import CSV');
+        toast.error(err.response?.data?.message || err.message || 'Failed to import CSV');
       } finally {
         setImporting(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -106,11 +129,10 @@ export default function Members() {
           <p className="text-slate-500 mt-1">{meta.total} total members in your organization</p>
         </div>
         
-        {/* 👇 New Buttons Area */}
+        {/* Buttons Area */}
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <input 
             type="file" 
-            
             ref={fileInputRef} 
             onChange={handleCsvUpload} 
             className="hidden" 
@@ -147,7 +169,7 @@ export default function Members() {
         />
       </div>
 
-      {/* Data Table (Same as before) */}
+      {/* Data Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-slate-500 animate-pulse font-medium">Loading members...</div>
