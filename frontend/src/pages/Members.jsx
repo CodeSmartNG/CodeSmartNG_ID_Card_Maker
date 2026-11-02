@@ -55,82 +55,96 @@ export default function Members() {
     }
   };
 
-  
-  
-// 👇 SMART CSV Import Logic (Handles Commas & Semicolons)
-const handleCsvUpload = (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  setImporting(true);
-  const reader = new FileReader();
-  
-  reader.onload = async (event) => {
-    try {
-      const csvText = event.target.result;
-      
-      // 1. Split into lines
-      const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-      
-      if (lines.length < 2) {
-        throw new Error('Your CSV file is empty or missing data rows.');
-      }
-
-      // 2. Auto-detect separator (comma or semicolon)
-      const firstLine = lines[0];
-      const separator = firstLine.includes(';') ? ';' : ',';
-
-      // 3. Extract and clean headers
-      const headers = firstLine.split(separator).map((h) => 
-        h.replace(/[\u200B-\u200D\uFEFF]/g, '').trim().toLowerCase()
-      );
-      
-      const parsedData = lines.slice(1).map((line) => {
-        const values = line.split(separator).map((v) => v.trim().replace(/^"|"$/g, '')); // Remove quotes
-        
-        const row = {};
-        headers.forEach((header, index) => {
-          // Normalize header names
-          let key = header.replace(/\s+/g, ''); // Remove spaces
-          if (key === 'firstname') key = 'firstName';
-          else if (key === 'lastname') key = 'lastName';
-          else if (key === 'email' || key === 'emailaddress') key = 'email';
-          else if (key === 'phone' || key === 'phonenumber') key = 'phone';
-          else if (key === 'position' || key === 'jobtitle') key = 'position';
-          else if (key === 'department' || key === 'dept') key = 'department';
-          else if (key === 'address') key = 'address';
-          else if (key === 'tin') key = 'tin';
-          else if (key === 'nin') key = 'nin';
-
-          row[key] = values[index] || '';
-        });
-        return row;
-      });
-
-      console.log("📊 Parsed CSV Data:", parsedData); // For debugging
-
-      // 4. Send to backend
-      const { data } = await memberService.bulkCreate(parsedData);
-      
-      // 5. Show the correct message based on how many actually saved
-      if (data.successCount > 0) {
-        toast.success(`Imported ${data.successCount} members successfully!`);
-        load(1); // Refresh the list
-      } else {
-        toast.error(`Imported 0 members. Please check your CSV headers.`);
-      }
-      
-    } catch (err) {
-      console.error("CSV Error Details:", err.response?.data || err);
-      toast.error(err.response?.data?.message || err.message || 'Failed to import CSV');
-    } finally {
-      setImporting(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
+  // 👇 Helper to Download a perfectly formatted Template
+  const downloadTemplate = () => {
+    const csvContent = "firstName,lastName,email,phone,position,department,address,tin,nin\nJohn,Doe,john@doe.com,08012345678,Manager,Sales,123 Main St,12345678,9876543210\n";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "members_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  reader.readAsText(file);
-};
+  // 👇 CSV Import Logic with Debugging
+  const handleCsvUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const reader = new FileReader();
+    
+    reader.onload = async (event) => {
+      try {
+        let csvText = event.target.result;
+        
+        // Remove the Byte Order Mark (BOM) if it exists (common in Excel files)
+        if (csvText.charCodeAt(0) === 0xFEFF) {
+          csvText = csvText.slice(1);
+        }
+
+        const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+        
+        if (lines.length < 2) {
+          throw new Error('Your CSV file is empty or missing data rows.');
+        }
+
+        const firstLine = lines[0];
+        // Detect if they used commas or semicolons
+        const separator = firstLine.includes(';') ? ';' : ',';
+
+        const headers = firstLine.split(separator).map((h) => h.trim().replace(/^"|"$/g, ''));
+        
+        // 🚨 DEBUG ALERT: Let's see what headers the app found
+        alert(`Headers found in your file: [${headers.join(", ")}]`);
+
+        const parsedData = lines.slice(1).map((line) => {
+          const values = line.split(separator).map((v) => v.trim().replace(/^"|"$/g, ''));
+          
+          const row = {};
+          headers.forEach((header, index) => {
+            // Clean header: lowercase and remove spaces/special chars
+            const cleanHeader = header.toLowerCase().replace(/[^a-z]/g, '');
+            
+            let key = cleanHeader;
+            if (cleanHeader === 'firstname') key = 'firstName';
+            else if (cleanHeader === 'lastname') key = 'lastName';
+            else if (cleanHeader === 'email' || cleanHeader === 'emailaddress') key = 'email';
+            else if (cleanHeader === 'phone' || cleanHeader === 'phonenumber') key = 'phone';
+            else if (cleanHeader === 'position' || cleanHeader === 'jobtitle') key = 'position';
+            else if (cleanHeader === 'department' || cleanHeader === 'dept') key = 'department';
+            else if (cleanHeader === 'address') key = 'address';
+            else if (cleanHeader === 'tin') key = 'tin';
+            else if (cleanHeader === 'nin') key = 'nin';
+
+            row[key] = values[index] || '';
+          });
+          return row;
+        });
+
+        // 4. Send to backend
+        const { data } = await memberService.bulkCreate(parsedData);
+        
+        if (data.successCount > 0) {
+          toast.success(`Imported ${data.successCount} members successfully!`);
+          load(1);
+        } else {
+          toast.error(`Imported 0 members. Your headers don't match.`);
+        }
+        
+      } catch (err) {
+        console.error("CSV Error Details:", err.response?.data || err);
+        toast.error(err.response?.data?.message || err.message || 'Failed to import CSV');
+      } finally {
+        setImporting(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+
+    reader.readAsText(file);
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full font-sans">
@@ -143,23 +157,30 @@ const handleCsvUpload = (e) => {
         </div>
         
         {/* Buttons Area */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <button 
+            onClick={downloadTemplate}
+            className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg font-semibold hover:bg-slate-200 transition text-sm"
+          >
+            Download Template
+          </button>
           <input 
             type="file" 
             ref={fileInputRef} 
             onChange={handleCsvUpload} 
             className="hidden" 
+            accept=".csv, text/csv"
           />
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={importing}
-            className="flex-1 sm:flex-none px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition shadow-sm disabled:opacity-50"
+            className="px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition shadow-sm disabled:opacity-50"
           >
             {importing ? 'Importing...' : 'Import CSV'}
           </button>
           <Link 
             to="/members/new" 
-            className="flex-1 sm:flex-none px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-sm flex items-center justify-center gap-2"
+            className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-sm flex items-center justify-center gap-2"
           >
             + Add Member
           </Link>
