@@ -2,12 +2,14 @@ import { Router } from 'express';
 import * as ctrl from '../controllers/member.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validateBody, validateQuery, validateParams } from '../middleware/validate.js';
-import { createMemberSchema, updateMemberSchema, listMembersSchema } from '../validations/member.validation.js';
+import { 
+  createMemberSchema, 
+  updateMemberSchema, 
+  listMembersSchema,
+  bulkCreateMemberSchema // 👈 Combined into one import
+} from '../validations/member.validation.js';
 import { z } from 'zod';
 import multer from 'multer';
-import { bulkCreateMemberSchema } from '../validations/member.validation.js';
-
-
 
 // Configure multer for memory storage (5MB limit)
 const upload = multer({
@@ -26,16 +28,19 @@ const router = Router();
 // All member routes require authentication
 router.use(requireAuth);
 
-// List
+// 1. List
 router.get('/', validateQuery(listMembersSchema), ctrl.listMembers);
 
-// Create
+// 2. Create (Single)
 router.post('/', validateBody(createMemberSchema), ctrl.createMember);
 
-// Get one
+// 3. Bulk Create (CSV Import) - MUST BE ABOVE /:id ROUTES
+router.post('/bulk', validateBody(bulkCreateMemberSchema), ctrl.bulkCreateMembers);
+
+// 4. Get one
 router.get('/:id', validateParams(idParam), ctrl.getMember);
 
-// Update
+// 5. Update
 router.put(
   '/:id',
   validateParams(idParam),
@@ -43,10 +48,10 @@ router.put(
   ctrl.updateMember
 );
 
-// Delete
+// 6. Delete
 router.delete('/:id', validateParams(idParam), ctrl.deleteMember);
 
-// Upload photo
+// 7. Upload photo
 router.post(
   '/:id/photo',
   validateParams(idParam),
@@ -54,5 +59,4 @@ router.post(
   ctrl.uploadPhoto
 );
 
-router.post('/bulk', validateBody(bulkCreateMemberSchema), ctrl.bulkCreateMembers);
 export default router;
