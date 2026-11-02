@@ -110,7 +110,7 @@ export default function Members() {
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <input 
             type="file" 
-            accept=".csv" 
+            
             ref={fileInputRef} 
             onChange={handleCsvUpload} 
             className="hidden" 
