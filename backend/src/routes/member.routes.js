@@ -5,6 +5,9 @@ import { validateBody, validateQuery, validateParams } from '../middleware/valid
 import { createMemberSchema, updateMemberSchema, listMembersSchema } from '../validations/member.validation.js';
 import { z } from 'zod';
 import multer from 'multer';
+import { bulkCreateMemberSchema } from '../validations/member.validation.js';
+
+
 
 // Configure multer for memory storage (5MB limit)
 const upload = multer({
@@ -51,4 +54,5 @@ router.post(
   ctrl.uploadPhoto
 );
 
+router.post('/bulk', validateBody(bulkCreateMemberSchema), ctrl.bulkCreateMembers);
 export default router;
