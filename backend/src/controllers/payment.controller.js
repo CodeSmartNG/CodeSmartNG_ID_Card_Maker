@@ -8,6 +8,7 @@ import { logger } from '../config/logger.js';
 import { issueRefund } from '../services/refund.service.js';
 import { reconcilePendingPayments } from '../services/reconciliation.service.js';
 import { generateCardPdf } from '../services/cardGenerator.js';
+import { sendCardReadyEmail } from '../services/emailService.js';
 
 /* =========================================================
    CONSTANTS
