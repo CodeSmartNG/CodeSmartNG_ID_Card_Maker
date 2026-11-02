@@ -7,9 +7,11 @@ export const createMemberSchema = z.object({
   phone: z.string().min(7).max(20).optional().or(z.literal('')),
   position: z.string().max(100).optional().or(z.literal('')),
   department: z.string().max(100).optional().or(z.literal('')),
+  address: z.string().max(200).optional().or(z.literal('')),
+  tin: z.string().max(50).optional().or(z.literal('')),
+  nin: z.string().max(50).optional().or(z.literal('')),
 });
 
-// For updates, all fields are optional
 export const updateMemberSchema = createMemberSchema.partial();
 
 export const listMembersSchema = z.object({
