@@ -7,7 +7,6 @@ export const memberService = {
   update: (id, data) => api.put(`/members/${id}`, data),
   delete: (id) => api.delete(`/members/${id}`),
   bulkCreate: (data) => api.post('/members/bulk', data),
-};
   uploadPhoto: (id, file) => {
     const formData = new FormData();
     formData.append('photo', file);
