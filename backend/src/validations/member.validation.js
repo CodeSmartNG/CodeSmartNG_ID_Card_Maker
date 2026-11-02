@@ -8,7 +8,7 @@ export const createMemberSchema = z.object({
   position: z.string().max(100).optional().or(z.literal('')),
   department: z.string().max(100).optional().or(z.literal('')),
   
-  // 👇 THESE MUST BE HERE OR ZOD WILL DELETE THEM
+  // 👇 THESE MUST BE HERE
   address: z.string().max(200).optional().or(z.literal('')),
   tin: z.string().max(50).optional().or(z.literal('')),
   nin: z.string().max(50).optional().or(z.literal('')),
