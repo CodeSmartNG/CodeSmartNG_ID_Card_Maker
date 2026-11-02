@@ -56,68 +56,71 @@ export default function Members() {
   };
 
   // 👇 ROBUST CSV Import Logic
-  const handleCsvUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // 👇 ROBUST CSV Import Logic
+const handleCsvUpload = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-    setImporting(true);
-    const reader = new FileReader();
-    
-    reader.onload = async (event) => {
-      try {
-        const csvText = event.target.result;
-        
-        // 1. Split by newlines (handles both \n and \r\n) and remove empty lines
-        const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-        
-        if (lines.length < 2) {
-          throw new Error('Your CSV file is empty or missing data rows.');
-        }
-
-        // 2. Extract and normalize headers
-        const headers = lines[0].split(',').map((h) => h.trim());
-        
-        const parsedData = lines.slice(1).map((line) => {
-          const values = line.split(',').map((v) => v.trim());
-          const row = {};
-          
-          headers.forEach((header, index) => {
-            // Clean up the header: lowercase, remove spaces and special characters
-            const cleanHeader = header.toLowerCase().replace(/[^a-z]/g, '');
-            
-            let key = cleanHeader;
-            // Map common variations to the exact backend fields
-            if (cleanHeader === 'firstname') key = 'firstName';
-            else if (cleanHeader === 'lastname') key = 'lastName';
-            else if (cleanHeader === 'email' || cleanHeader === 'emailaddress') key = 'email';
-            else if (cleanHeader === 'phone' || cleanHeader === 'phonenumber') key = 'phone';
-            else if (cleanHeader === 'position' || cleanHeader === 'jobtitle') key = 'position';
-            else if (cleanHeader === 'department' || cleanHeader === 'dept') key = 'department';
-            else if (cleanHeader === 'address') key = 'address';
-            else if (cleanHeader === 'tin') key = 'tin';
-            else if (cleanHeader === 'nin') key = 'nin';
-
-            row[key] = values[index] || '';
-          });
-          return row;
-        });
-
-        // 3. Send to backend
-        const { data } = await memberService.bulkCreate(parsedData);
-        toast.success(`Imported ${data.successCount} members successfully!`);
-        
-        // Refresh the list
-        load(1);
-      } catch (err) {
-        toast.error(err.response?.data?.message || err.message || 'Failed to import CSV');
-      } finally {
-        setImporting(false);
-        if (fileInputRef.current) fileInputRef.current.value = '';
+  setImporting(true);
+  const reader = new FileReader();
+  
+  reader.onload = async (event) => {
+    try {
+      const csvText = event.target.result;
+      
+      // 1. Split by newlines and remove empty lines
+      const lines = csvText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+      
+      if (lines.length < 2) {
+        throw new Error('Your CSV file is empty or missing data rows.');
       }
-    };
 
-    reader.readAsText(file);
+      // 2. Extract and clean headers (removes invisible BOM characters from Excel)
+      const headers = lines[0].split(',').map((h) => 
+        h.replace(/[\u200B-\u200D\uFEFF]/g, '').trim().toLowerCase().replace(/[^a-z]/g, '')
+      );
+      
+      const parsedData = lines.slice(1).map((line) => {
+        // Handle simple quoted CSV values
+        const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',').map(v => v.trim());
+        
+        const row = {};
+        headers.forEach((header, index) => {
+          const cleanValue = (values[index] || '').replace(/^"|"$/g, '').trim(); // Strip quotes
+
+          let key = header;
+          if (header === 'firstname') key = 'firstName';
+          else if (header === 'lastname') key = 'lastName';
+          else if (header === 'email' || header === 'emailaddress') key = 'email';
+          else if (header === 'phone' || header === 'phonenumber') key = 'phone';
+          else if (header === 'position' || header === 'jobtitle') key = 'position';
+          else if (header === 'department' || header === 'dept') key = 'department';
+          else if (header === 'address') key = 'address';
+          else if (header === 'tin') key = 'tin';
+          else if (header === 'nin') key = 'nin';
+
+          row[key] = cleanValue;
+        });
+        return row;
+      });
+
+      // 3. Send to backend
+      const { data } = await memberService.bulkCreate(parsedData);
+      toast.success(`Imported ${data.successCount} members successfully!`);
+      
+      load(1);
+    } catch (err) {
+      // Show the EXACT Zod error in the console so we can debug if it fails again
+      console.error("CSV Error:", err.response?.data || err);
+      toast.error(err.response?.data?.message || err.message || 'Failed to import CSV');
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
+
+  reader.readAsText(file);
+};
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full font-sans">
