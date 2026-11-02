@@ -343,7 +343,19 @@ const finalizeSuccess = async (paymentId, paidAt = new Date()) => {
     });
     
     logger.info({ cardId: result.payment.cardId, pdfUrl }, '✅ PDF generated and saved');
+
+    // 👇 SEND THE EMAIL HERE
+    if (result.payment.card.member.email) {
+      await sendCardReadyEmail({
+        to: result.payment.card.member.email,
+        memberName: `${result.payment.card.member.firstName} ${result.payment.card.member.lastName}`,
+        organizationName: result.payment.card.organization.name,
+        cardNumber: result.payment.card.cardNumber,
+        pdfUrl,
+      });
+    }
+    
   } catch (err) {
-    logger.error({ err, cardId: result.payment.cardId }, '❌ PDF generation failed');
+    logger.error({ err, cardId: result.payment.cardId }, '❌ PDF generation or Email sending failed');
   }
 };
