@@ -14,7 +14,7 @@ import { sendCardReadyEmail } from '../services/emailService.js';
    CONSTANTS
    ========================================================= */
 
-const CARD_PRICE_KOBO = 250_000; // ₦2,500
+const CARD_PRICE_KOBO = 100_000; // ₦1,000
 const CURRENCY = 'NGN';
 const PAYMENT_TTL_MS = 30 * 60 * 1000; // 30 min
 
