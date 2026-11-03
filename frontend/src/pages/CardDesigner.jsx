@@ -117,7 +117,7 @@ export default function CardDesigner() {
           <div className="mt-10 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
               <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Total to pay</div>
-              <div className="text-3xl font-extrabold text-slate-900">{formatNaira(250000)}</div>
+              <div className="text-3xl font-extrabold text-slate-900">{formatNaira(100000)}</div>
             </div>
             <button 
               onClick={handleCreate} 
