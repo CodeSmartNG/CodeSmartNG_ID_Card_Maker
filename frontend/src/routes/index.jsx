@@ -22,6 +22,8 @@ const CardHistory = lazy(() => import('../pages/CardHistory'));
 const VerifyCard = lazy(() => import('../pages/VerifyCard')); 
 const NotFound = lazy(() => import('../pages/NotFound'));
 const OrganizationProfile = lazy(() => import('../pages/OrganizationProfile'));
+const Staff = lazy(() => import('../pages/Staff'));
+
 
 /* =========================================================
    2. PROTECTED ROUTE WRAPPER
@@ -77,6 +79,7 @@ export const router = createBrowserRouter([
           { path: '/cards/pay/:cardId', element: wrap(<CardPayment />) },
           { path: '/cards/history', element: wrap(<CardHistory />) },
           { path: '/organization', element: wrap(<OrganizationProfile />) },
+          { path: '/staff', element: wrap(<Staff />) },
         ]
       }
     ]
