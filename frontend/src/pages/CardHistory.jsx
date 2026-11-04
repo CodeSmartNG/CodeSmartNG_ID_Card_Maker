@@ -13,7 +13,7 @@ export default function CardHistory() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(null);
   
-  // 👇 Refund States
+  // Refund States
   const [refundPaymentObj, setRefundPaymentObj] = useState(null);
   const [refundAmount, setRefundAmount] = useState('');
   const [refundReason, setRefundReason] = useState('');
@@ -36,7 +36,7 @@ export default function CardHistory() {
     try {
       await api.post(`/payments/${paymentId}/retry-generation`);
       fetchPayments();
-      toast.success('PDF generated successfully!');
+      toast.success('PDF regenerated successfully!');
     } catch (err) {
       toast.error('Failed to generate PDF: ' + (err.response?.data?.message || err.message));
     } finally {
@@ -44,12 +44,10 @@ export default function CardHistory() {
     }
   };
 
-  // 👇 Refund Handler
   const handleRefund = async (e) => {
     e.preventDefault();
     setRefunding(true);
     try {
-      // Convert Naira to Kobo for Paystack
       const amountInKobo = refundAmount ? Math.round(Number(refundAmount) * 100) : null;
       
       await api.post(`/payments/${refundPaymentObj.id}/refund`, {
@@ -58,10 +56,10 @@ export default function CardHistory() {
       });
 
       toast.success('Refund processed successfully!');
-      setRefundPaymentObj(null); // Close modal
+      setRefundPaymentObj(null);
       setRefundAmount('');
       setRefundReason('');
-      fetchPayments(); // Refresh list
+      fetchPayments();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Refund failed');
     } finally {
@@ -91,7 +89,6 @@ export default function CardHistory() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full font-sans">
       
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Card History</h1>
@@ -138,17 +135,17 @@ export default function CardHistory() {
                 </div>
 
                 <div className="pt-1 flex flex-col gap-2">
-                  {p.card?.pdfUrl ? (
+                  {p.card?.pdfUrl && (
                     <a href={p.card.pdfUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-sm font-bold transition">
                       Download PDF
                     </a>
-                  ) : (
-                    <button onClick={() => handleGeneratePdf(p.id)} disabled={generating === p.id} className="w-full flex items-center justify-center gap-2 py-2.5 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-sm font-bold transition disabled:opacity-50">
-                      {generating === p.id ? 'Generating...' : 'Generate PDF'}
-                    </button>
                   )}
                   
-                  {/* Refund Button (Mobile) */}
+                  {/* 👇 ALWAYS SHOW GENERATE/REGENERATE BUTTON */}
+                  <button onClick={() => handleGeneratePdf(p.id)} disabled={generating === p.id} className="w-full flex items-center justify-center gap-2 py-2.5 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-sm font-bold transition disabled:opacity-50">
+                    {generating === p.id ? 'Generating...' : (p.card?.pdfUrl ? 'Regenerate PDF 🔄' : 'Generate PDF')}
+                  </button>
+                  
                   {p.status === 'SUCCESS' && user?.role === 'ADMIN' && (
                     <button onClick={() => setRefundPaymentObj(p)} className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-bold transition">
                       Issue Refund
@@ -191,11 +188,12 @@ export default function CardHistory() {
                           {p.card?.pdfUrl && (
                             <a href={p.card.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 font-bold transition">Download ⬇️</a>
                           )}
+                          
+                          {/* 👇 ALWAYS SHOW GENERATE/REGENERATE BUTTON */}
                           <button onClick={() => handleGeneratePdf(p.id)} disabled={generating === p.id} className="text-amber-600 hover:text-amber-800 font-bold disabled:opacity-50 transition">
                             {generating === p.id ? 'Generating...' : (p.card?.pdfUrl ? 'Regenerate 🔄' : 'Generate PDF 🔄')}
                           </button>
                           
-                          {/* Refund Button (Desktop) */}
                           {p.status === 'SUCCESS' && user?.role === 'ADMIN' && (
                             <button onClick={() => setRefundPaymentObj(p)} className="text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">
                               Refund
