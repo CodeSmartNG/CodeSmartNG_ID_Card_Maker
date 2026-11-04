@@ -62,8 +62,8 @@ model Organization {
   email        String?
   website      String?
   tagline      String?
-  cacNumber    String?      // 👈 ADDED CAC NUMBER
-  tin          String?      // 👈 ADDED CORPORATE TIN
+  cacNumber    String?
+  tin          String?
   template     String       @default("classic")
   members      Member[]
   cards        IDCard[]
@@ -82,9 +82,10 @@ model Member {
   phone          String?
   position       String?
   department     String?
-  address        String?      // 👈 ADDED ADDRESS
-  tin            String?      // 👈 ADDED PERSONAL TIN
-  nin            String?      // 👈 ADDED NIN
+  address        String?
+  tin            String?
+  nin            String?
+  memberType     String?      // 👈 ADDED: Student, Staff, Jibwis Member, etc.
   photoUrl       String?
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -107,6 +108,7 @@ model IDCard {
   designJson     Json?
   frontImageUrl  String?
   backImageUrl   String?
+  batchId        String?      // 👈 ADDED: For bulk payments
   pdfUrl         String?
   verificationId String       @unique
   issuedAt       DateTime?
@@ -126,8 +128,8 @@ model Payment {
   currency           String        @default("NGN")
   status             PaymentStatus @default(PENDING)
   provider           String        @default("paystack")
-  cardId             String
-  card               IDCard        @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId             String?       // 👈 CHANGED: Optional for bulk payments
+  card               IDCard?       @relation(fields: [cardId], references: [id], onDelete: Cascade) // 👈 CHANGED: Optional
   organizationId     String
   organization       Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   metadata           Json?
