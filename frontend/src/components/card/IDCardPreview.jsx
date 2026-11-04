@@ -19,7 +19,6 @@ export default function IDCardPreview({ member, organization, template = 'classi
             {organization?.name || 'Organization Name'}
           </div>
         </div>
-        {/* CAC / TIN on the card */}
         {organization?.cacNumber && (
           <div className="text-[8px] text-slate-400 font-mono text-right flex-shrink-0 ml-2">
             RC: {organization.cacNumber}
@@ -40,17 +39,22 @@ export default function IDCardPreview({ member, organization, template = 'classi
           <div className="text-xl font-bold text-slate-900 leading-tight truncate">
             {member?.firstName} <br /> {member?.lastName}
           </div>
-          <div className="text-xs text-slate-500 font-medium italic mt-0.5 truncate">
+          
+          {/* 👇 Member Type & Position */}
+          <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide mt-1 truncate">
+            {member?.memberType || 'MEMBER'}
+          </div>
+          <div className="text-[10px] text-slate-500 font-medium italic truncate">
             {member?.position || 'Position'}
           </div>
           
-          <div className="mt-3">
+          <div className="mt-2">
             <div className="text-[8px] text-slate-400 uppercase tracking-widest font-bold mb-0.5">ID Number</div>
             <div className="text-sm font-bold text-slate-900 font-mono tracking-tight">{member?.memberNumber}</div>
           </div>
 
           {/* Address & TIN/NIN */}
-          <div className="mt-2 space-y-0.5">
+          <div className="mt-1.5 space-y-0.5">
             {member?.address && (
               <div className="text-[8px] text-slate-500 truncate">
                 Addr: {member.address}
@@ -101,7 +105,12 @@ export default function IDCardPreview({ member, organization, template = 'classi
           <div className="text-2xl font-extrabold text-slate-900 leading-none tracking-tight truncate">
             {member?.firstName} <br /> {member?.lastName}
           </div>
-          <div className="text-[11px] text-slate-500 font-semibold mt-1 truncate max-w-[150px]">
+          
+          {/* 👇 Member Type & Position */}
+          <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide mt-1 truncate max-w-[150px]">
+            {member?.memberType || 'MEMBER'}
+          </div>
+          <div className="text-[9px] text-slate-500 font-semibold truncate max-w-[150px]">
             {member?.position || 'Position'}
           </div>
         </div>
@@ -164,7 +173,12 @@ export default function IDCardPreview({ member, organization, template = 'classi
           <div className="text-[22px] font-light text-black leading-[1.1] tracking-tight truncate">
             {member?.firstName} <br /> {member?.lastName}
           </div>
-          <div className="text-[9px] uppercase tracking-[0.15em] text-zinc-500 mt-1 truncate max-w-[150px]">
+          
+          {/* 👇 Member Type & Position */}
+          <div className="text-[9px] font-bold uppercase tracking-[0.15em] text-black mt-1 truncate max-w-[150px]">
+            {member?.memberType || 'MEMBER'}
+          </div>
+          <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 truncate max-w-[150px]">
             {member?.position || 'Position'}
           </div>
         </div>
