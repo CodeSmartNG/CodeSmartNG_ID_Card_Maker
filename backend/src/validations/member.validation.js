@@ -10,6 +10,7 @@ const singleMemberSchema = z.object({
   address: z.string().optional().or(z.literal('')).or(z.null()),
   tin: z.string().optional().or(z.literal('')).or(z.null()),
   nin: z.string().optional().or(z.literal('')).or(z.null()),
+  memberType: z.string().optional().or(z.literal('')).or(z.null()), 
 });
 
 export const createMemberSchema = singleMemberSchema;
