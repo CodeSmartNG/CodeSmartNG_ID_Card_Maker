@@ -20,14 +20,28 @@ export const generateCardPdf = async ({ card, member, organization }) => {
 
   // Header
   page.drawRectangle({ x: 0, y: 113, width: 242.6, height: 40, color: rgb(0.06, 0.09, 0.16) });
-  page.drawText(truncate(organization.name || 'Organization', 35), {
-    x: 15, y: 128, size: 12, font: boldFont, color: rgb(1, 1, 1),
+  
+  // 👇 CENTERED Organization Name
+  const orgName = truncate(organization.name || 'Organization', 35);
+  const orgNameWidth = boldFont.widthOfTextAtSize(orgName, 12);
+  page.drawText(orgName, {
+    x: (242.6 - orgNameWidth) / 2, // Calculate center
+    y: 128, 
+    size: 12, 
+    font: boldFont, 
+    color: rgb(1, 1, 1),
   });
   
+  // 👇 CENTERED CAC / TIN
   if (organization.cacNumber || organization.tin) {
     const orgIdText = organization.cacNumber ? `RC: ${organization.cacNumber}` : `TIN: ${organization.tin}`;
+    const orgIdWidth = font.widthOfTextAtSize(orgIdText, 7);
     page.drawText(orgIdText, {
-      x: 15, y: 118, size: 7, font: font, color: rgb(0.6, 0.6, 0.6),
+      x: (242.6 - orgIdWidth) / 2, // Calculate center
+      y: 116, 
+      size: 7, 
+      font: font, 
+      color: rgb(0.6, 0.6, 0.6),
     });
   }
 
@@ -36,18 +50,18 @@ export const generateCardPdf = async ({ card, member, organization }) => {
     x: 90, y: 95, size: 16, font: boldFont, color: rgb(0, 0, 0),
   });
   
-  // 👇 Member Type (Bold and Blue)
+  // Member Type (Bold and Blue)
   page.drawText(truncate((member.memberType || 'MEMBER').toUpperCase(), 30), {
     x: 90, y: 83, size: 10, font: boldFont, color: rgb(0.3, 0.4, 0.8), 
   });
 
-  // 👇 Position (Smaller and Grey)
+  // Position (Smaller and Grey)
   page.drawText(truncate(member.position || 'Position', 30), {
     x: 90, y: 73, size: 8, font: font, color: rgb(0.4, 0.4, 0.4),
   });
   
-  // ID Number
-  page.drawText(truncate(`ID: ${member.memberNumber}`, 20), {
+  // ID Number (Reduced truncation to prevent hitting the QR code)
+  page.drawText(truncate(`ID: ${member.memberNumber}`, 18), {
     x: 90, y: 63, size: 9, font: font, color: rgb(0, 0, 0),
   });
 
