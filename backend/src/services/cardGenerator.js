@@ -31,27 +31,34 @@ export const generateCardPdf = async ({ card, member, organization }) => {
     });
   }
 
-  // Member Info
+  // Member Name
   page.drawText(truncate(`${member.firstName} ${member.lastName}`, 25), {
     x: 90, y: 95, size: 16, font: boldFont, color: rgb(0, 0, 0),
   });
   
-  page.drawText(truncate(member.position || 'Member', 30), {
-    x: 90, y: 83, size: 10, font: font, color: rgb(0.4, 0.4, 0.4),
-  });
-  
-  // 👇 Truncate the ID so it doesn't hit the QR code
-  page.drawText(truncate(`ID: ${member.memberNumber}`, 20), {
-    x: 90, y: 71, size: 9, font: font, color: rgb(0, 0, 0),
+  // 👇 Member Type (Bold and Blue)
+  page.drawText(truncate((member.memberType || 'MEMBER').toUpperCase(), 30), {
+    x: 90, y: 83, size: 10, font: boldFont, color: rgb(0.3, 0.4, 0.8), 
   });
 
-  // 👇 Address, TIN, and NIN
+  // 👇 Position (Smaller and Grey)
+  page.drawText(truncate(member.position || 'Position', 30), {
+    x: 90, y: 73, size: 8, font: font, color: rgb(0.4, 0.4, 0.4),
+  });
+  
+  // ID Number
+  page.drawText(truncate(`ID: ${member.memberNumber}`, 20), {
+    x: 90, y: 63, size: 9, font: font, color: rgb(0, 0, 0),
+  });
+
+  // Address
   if (member.address) {
     page.drawText(`Addr: ${truncate(member.address, 28)}`, {
-      x: 90, y: 59, size: 7, font: font, color: rgb(0.4, 0.4, 0.4),
+      x: 90, y: 51, size: 7, font: font, color: rgb(0.4, 0.4, 0.4),
     });
   }
 
+  // TIN / NIN
   if (member.tin || member.nin) {
     const tinNinText = [
       member.tin ? `TIN: ${member.tin}` : null,
@@ -59,7 +66,7 @@ export const generateCardPdf = async ({ card, member, organization }) => {
     ].filter(Boolean).join(' | ');
     
     page.drawText(truncate(tinNinText, 32), {
-      x: 90, y: 47, size: 7, font: font, color: rgb(0.4, 0.4, 0.4),
+      x: 90, y: 40, size: 7, font: font, color: rgb(0.4, 0.4, 0.4),
     });
   }
   
@@ -69,16 +76,16 @@ export const generateCardPdf = async ({ card, member, organization }) => {
     x: 15, y: 6, size: 8, font: font, color: rgb(1, 1, 1),
   });
 
-  // QR Code (Moved slightly right and made smaller to prevent overlap)
+  // QR Code
   try {
     const qrBuffer = await generateQrBuffer(card.verificationId);
     const qrImage = await pdfDoc.embedPng(qrBuffer);
     
     page.drawImage(qrImage, { 
-      x: 185, // Moved to the right (was 175)
-      y: 25,  // Moved down slightly
-      width: 45, // Smaller (was 50)
-      height: 45 // Smaller
+      x: 185, 
+      y: 25,  
+      width: 45, 
+      height: 45 
     });
 
     page.drawText('Scan to Verify', {
