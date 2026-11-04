@@ -11,6 +11,7 @@ const EMPTY = {
   address: '', 
   tin: '', 
   nin: '', 
+  memberType: '', // 👈 ADDED
   photo: null, 
   photoPreview: null 
 };
@@ -26,6 +27,7 @@ export default function MemberForm({ initialData = null, onSubmit, submitting = 
         address: initialData.address || '',
         tin: initialData.tin || '',
         nin: initialData.nin || '',
+        memberType: initialData.memberType || '', // 👈 ADDED
         photo: null, 
         photoPreview: initialData.photoUrl || null 
       });
@@ -49,6 +51,7 @@ export default function MemberForm({ initialData = null, onSubmit, submitting = 
     const errs = {};
     if (!form.firstName.trim()) errs.firstName = 'Required';
     if (!form.lastName.trim()) errs.lastName = 'Required';
+    if (!form.memberType) errs.memberType = 'Required'; // 👈 Make it required
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
@@ -62,6 +65,7 @@ export default function MemberForm({ initialData = null, onSubmit, submitting = 
       address: form.address?.trim() || undefined,
       tin: form.tin?.trim() || undefined,
       nin: form.nin?.trim() || undefined,
+      memberType: form.memberType, // 👈 ADDED TO PAYLOAD
     }, form.photo);
   };
 
@@ -85,10 +89,12 @@ export default function MemberForm({ initialData = null, onSubmit, submitting = 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">First Name *</label>
               <input name="firstName" value={form.firstName} onChange={handleChange} disabled={submitting} className={inputClass(errors.firstName)} placeholder="John" />
+              {errors.firstName && <span className="text-red-500 text-xs mt-1 block">{errors.firstName}</span>}
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Last Name *</label>
               <input name="lastName" value={form.lastName} onChange={handleChange} disabled={submitting} className={inputClass(errors.lastName)} placeholder="Doe" />
+              {errors.lastName && <span className="text-red-500 text-xs mt-1 block">{errors.lastName}</span>}
             </div>
           </div>
 
@@ -104,25 +110,48 @@ export default function MemberForm({ initialData = null, onSubmit, submitting = 
             </div>
           </div>
 
-          {/* Row 3: Job Info */}
+          {/* Row 3: Member Type & Position */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Position</label>
-              <input name="position" value={form.position || ''} onChange={handleChange} disabled={submitting} className={inputClass(false)} placeholder="Engineer" />
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Member Type *</label>
+              <select 
+                name="memberType" 
+                value={form.memberType || ''} 
+                onChange={handleChange} 
+                disabled={submitting} 
+                className={inputClass(errors.memberType)}
+              >
+                <option value="">Select Type...</option>
+                <option value="Student">Student</option>
+                <option value="Staff">Staff</option>
+                <option value="Security">Security</option>
+                <option value="Officer">Officer</option>
+                <option value="Jibwis Member">Jibwis Member</option>
+                <option value="Other">Other</option>
+              </select>
+              {errors.memberType && <span className="text-red-500 text-xs mt-1 block">{errors.memberType}</span>}
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Department</label>
-              <input name="department" value={form.department || ''} onChange={handleChange} disabled={submitting} className={inputClass(false)} placeholder="Engineering" />
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Position</label>
+              <input name="position" value={form.position || ''} onChange={handleChange} disabled={submitting} className={inputClass(false)} placeholder="e.g. Head Boy, Teacher" />
             </div>
           </div>
 
-          {/* Row 4: Address */}
+          {/* Row 4: Department */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Department</label>
+              <input name="department" value={form.department || ''} onChange={handleChange} disabled={submitting} className={inputClass(false)} placeholder="Engineering / Sciences" />
+            </div>
+          </div>
+
+          {/* Row 5: Address */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Residential Address</label>
             <input name="address" value={form.address || ''} onChange={handleChange} disabled={submitting} className={inputClass(false)} placeholder="123 Main Street, Lagos" />
           </div>
 
-          {/* Row 5: TIN & NIN */}
+          {/* Row 6: TIN & NIN */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">TIN (Optional)</label>
